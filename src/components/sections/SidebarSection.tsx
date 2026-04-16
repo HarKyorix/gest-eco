@@ -1,6 +1,6 @@
-import { type Table } from "@/store/table"
+import { type Board } from "@/store/board"
 import { Button } from "@/components/ui/button"
-import { PieChart, Plus } from "lucide-react"
+import { ArrowLeft, PieChart, Plus, Trash } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -11,36 +11,35 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { DropdownMenuDestructive } from "../DropdownMenuDestructive"
 
 interface SidebarSectionProps {
-  currentTableId: string | null
-  tables?: Table[]
-  navigate: (path: string) => void
-  onUpdateTable: (id: string, data: Partial<Table>) => void
-  onAddTable: () => void
-  onRemoveTable: (id: string) => void
+  currentBoardId: string | null
+  boards?: Board[]
+  goBack: () => void
+  gotoDetail: (id: string) => void
+  onAddBoard: () => void
+  onRemoveBoard: (id: string) => void
 }
 
 export function SidebarSection({
-  currentTableId,
-  tables,
-  navigate,
-  onAddTable,
-  // onUptadeTable,
-  // onRemoveTable,
+  currentBoardId,
+  boards,
+  goBack,
+  gotoDetail,
+  onAddBoard,
+  onRemoveBoard,
 }: SidebarSectionProps) {
   return (
     <Sidebar className="w-(--sidebar-width) bg-slate-950/95 text-white shadow-lg">
       <SidebarHeader className="border-b border-white/10 px-4 py-4">
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold">Family Eco</p>
-            <p className="text-xs text-white/70">Budget management, simplified.</p>
-          </div>
+          <Button variant="outline" size="icon" onClick={goBack}>
+            <ArrowLeft className="size-4" />
+          </Button>
+          <p className="text-sm font-semibold">Family Eco</p>
           <Button 
             variant="outline" 
-            onClick={() => onAddTable()}
+            onClick={() => onAddBoard()}
             size="icon"
           >
             <Plus />
@@ -48,18 +47,24 @@ export function SidebarSection({
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 py-3">
-        <SidebarMenu>
-          { tables?.map((table) => (
-            <SidebarMenuItem key={table.id} className="flex">
+      <SidebarContent className="mt-8 px-2 py-3">
+        <SidebarMenu className="flex flex-col gap-4">
+          { boards?.map((board) => (
+            <SidebarMenuItem key={board.id} className="flex">
               <SidebarMenuButton
-                isActive={currentTableId === table.id}
-                onClick={() => navigate(table.id)}
+                isActive={currentBoardId === board.id}
+                onClick={() => gotoDetail(board.id)}
               >
                 <PieChart className="size-4" />
-                <span>{table.title}</span>
+                <span>{board.title}</span>
               </SidebarMenuButton>
-              <DropdownMenuDestructive onUpdate={() => {}} onDelete={() => {}} />
+              <Button 
+                variant="destructive" 
+                size="icon" 
+                onClick={() => onRemoveBoard(board.id)}
+              >
+                <Trash className="size-4" />
+              </Button>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

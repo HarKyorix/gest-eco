@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -32,12 +33,15 @@ interface DialogFormProps {
   description?: string
   fields: Field[]
   onSubmit: (data: Record<string, string>) => void
-  children: React.ReactNode
+  children?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  initialData?: Record<string, any>
 }
 
-export function DialogForm({title, description, fields, onSubmit, children}: DialogFormProps) {
+export function DialogForm({title, description, fields, onSubmit, children, open, onOpenChange, initialData}: DialogFormProps) {
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <form onSubmit={(e) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -47,7 +51,7 @@ export function DialogForm({title, description, fields, onSubmit, children}: Dia
         });
         onSubmit(data);
       }}>
-        <DialogTrigger render={<Button variant="outline">{children}</Button>} />
+        {children && <DialogTrigger render={<Button variant="outline">{children}</Button>} />}
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -58,11 +62,12 @@ export function DialogForm({title, description, fields, onSubmit, children}: Dia
             )}
           </DialogHeader>
           <FieldGroup>
-            {fields.map((field, index) => (
-              field.type === 'select' ? (
+            {fields.map((field, index) => {
+              const fieldValue = initialData?.[field.name] || field.defaultValue;
+              return field.type === 'select' ? (
                 <Field key={index}>
                   <Label htmlFor={field.id}>{field.label}</Label>
-                  <select id={field.id} name={field.name}>
+                  <select id={field.id} name={field.name} defaultValue={fieldValue}>
                     {field.options?.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
@@ -71,10 +76,10 @@ export function DialogForm({title, description, fields, onSubmit, children}: Dia
               ) : (
               <Field key={field.id}>
                 <Label htmlFor={field.id}>{field.label}</Label>
-                <Input id={field.id} name={field.name} defaultValue={field.defaultValue} />
+                <Input id={field.id} name={field.name} defaultValue={fieldValue} />
               </Field>
             )
-            ))}
+            })}
           </FieldGroup>
           <DialogFooter>
             <DialogClose render={<Button variant="outline">Cancel</Button>} />

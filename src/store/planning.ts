@@ -40,7 +40,7 @@ export interface Planning {
   depenses: Depense[];
   epargnes: Epargne[];
   position?: number;
-  tableId?: string;
+  boardId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,10 +49,10 @@ export interface Planning {
 export interface PlanningState {
   list: Planning[];
 
-  init: (tableId?: string) => void;
+  init: (boardId?: string) => void;
 
-  getList: (tableId?: string) => Planning[];
-  getOne: ({id, tableId}: {id: string, tableId?: string}) => Planning | undefined;
+  getList: (boardId?: string) => Planning[];
+  getOne: ({id, boardId}: {id: string, boardId?: string}) => Planning | undefined;
   add: (planning: Partial<Planning>) => void;
   update: (id: string, updatedPlanning: Partial<Planning>) => void;
   remove: (id: string) => void;
@@ -89,30 +89,30 @@ export const usePlanningStore = create<PlanningState>()(
     (set, get) => ({
       list: [],
 
-      init: (tableId?: string) => {
-        const savedList = get().getList(tableId);
+      init: (boardId?: string) => {
+        const savedList = get().getList(boardId);
         if (savedList.length == 0) {
           get().add({
             title: "Example Planning",
             budgets: [],
             depenses: [],
             epargnes: [],
-            tableId: tableId || undefined,
+            boardId: boardId || undefined,
           });
         }
       },
 
 
-      getList: (tableId?: string) => {
+      getList: (boardId?: string) => {
         const list = get().list;
-        if (tableId) {
-          return list.filter((planning) => planning.tableId === tableId);
+        if (boardId) {
+          return list.filter((planning) => planning.boardId === boardId);
         }
         return list;
 
       },
-      getOne: ({id, tableId}: {id: string, tableId?: string}) => {
-        const list = get().getList(tableId);
+      getOne: ({id, boardId}: {id: string, boardId?: string}) => {
+        const list = get().getList(boardId);
         return list.find((planning) => planning.id === id);
       },
 
@@ -129,7 +129,7 @@ export const usePlanningStore = create<PlanningState>()(
           depenses: planning.depenses || [],
           epargnes: planning.epargnes || [],
           position: planning.position || get().getPosition() + 1,
-          tableId: planning.tableId || undefined,
+          boardId: planning.boardId || undefined,
           createdAt: new Date(),
           updatedAt: new Date(),
         };

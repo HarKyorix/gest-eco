@@ -7,13 +7,14 @@ import {
   ItemGroup,
   ItemTitle,
 } from "@/components/ui/item"
-import { DropdownMenuDestructive } from "./DropdownMenuDestructive"
 import { type Budget, type Depense, type Epargne } from '../store/planning'
+import { Button } from "./ui/button";
+import { Trash } from "lucide-react";
 
 type ItemWithActions = (Partial<Budget | Depense | Epargne>) & {
   title?: string;
-  update?: () => void
-  delete?: () => void
+  onUpdate?: (id: string, data: Partial<Budget | Depense | Epargne>) => void
+  onDelete?: (id: string) => void
 }
 
 export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
@@ -31,10 +32,15 @@ export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
             )}
           </ItemContent>
           <ItemActions>
-            <DropdownMenuDestructive 
-              onUpdate={() => item.update?.()}
-              onDelete={() => item.delete?.()} 
-            />
+            {item.onDelete && item.id && (
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={() => item.onDelete!(item.id!)}
+              >
+                <Trash className="size-4" />
+              </Button>
+            )}
           </ItemActions>
         </Item>
       ))}
