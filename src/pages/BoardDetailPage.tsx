@@ -1,14 +1,17 @@
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { usePlanningStore } from "@/store/planning"
+import { usePlanningStore, type Budget, type Depense, type Epargne } from "@/store/planning"
+import { useSourceStore } from "@/store/source"
 import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-import { PlanningContent } from "@/components/sections"
-
+import { BudgetSection, DepenseSection, EpargneSection } from "@/components/sections"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import TextEditable from "@/components/TextEditable"
 
 export default function BoardDetailPage() {
   const planningStore = usePlanningStore()
+  const sourceStore = useSourceStore()
   const navigate = useNavigate()
   const { boardId, planningId } = useParams<{ boardId?: string; planningId?: string }>()
 
@@ -56,15 +59,67 @@ export default function BoardDetailPage() {
             ))}
           </TabsList>
 
-          {plannings.map((planning) => (
-            <PlanningContent
-              key={planning.id}
-              planning={planning}
-              planningId={planning.id}
-              onUpdatePlanning={planningStore.update}
-              onRemovePlanning={planningStore.remove}
-            />
-          ))}
+          <TabsContent value={planningId} className="mt-4">
+            {planningId && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-start justify-between gap-4">
+                  <div className="text-left">
+                    <TextEditable
+                      value={planningStore.getOne({ id: planningId })?.title}
+                      onSave={(value: string) => planningStore.update(planningId, { title: value })}
+                    >
+                      <p className="text-lg font-semibold">{planningStore.getOne({ id: planningId })?.title}</p>
+                    </TextEditable>
+                    <TextEditable
+                      value={planningStore.getOne({ id: planningId })?.commentaire}
+                      onSave={(value: string) => planningStore.update(planningId, { commentaire: value })}
+                    >
+                      <p className="text-sm text-muted-foreground">{planningStore.getOne({ id: planningId })?.commentaire || "Aucun commentaire"}</p>
+                    </TextEditable>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => planningStore.remove(planningId)}
+                  >
+                    <Trash className="size-4" />
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+
+              <CardDescription className="px-4">
+                <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                  <BudgetSection 
+                    sources={sourceStore.getList()}
+                    budgets={planningStore.getOne({ id: planningId })?.budgets || []} 
+                    addBudget={(data: Partial<Budget>) => planningStore.addBudget(planningId, data)}
+                    updateBudget={(id: string, data: Partial<Budget>) => planningStore.updateBudget(planningId, id, data)}
+                    deleteBudget={(id: string) => planningStore.removeBudget(planningId, id)}
+                  />
+                  <DepenseSection 
+                    depenses={planningStore.getOne({ id: planningId })?.depenses || []} 
+                    addDepense={(data: Partial<Depense>) => planningStore.addDepense(planningId, data)}
+                    updateDepense={(id: string, data: Partial<Depense>) => planningStore.updateDepense(planningId, id, data)}
+                    deleteDepense={(id: string) => planningStore.removeDepense(planningId, id)}
+                  />
+                  <EpargneSection 
+                    epargnes={planningStore.getOne({ id: planningId })?.epargnes || []} 
+                    addEpargne={(data: Partial<Epargne>) => planningStore.addEpargne(planningId, data)}
+                    updateEpargne={(id: string, data: Partial<Epargne>) => planningStore.updateEpargne(planningId, id, data)}
+                    deleteEpargne={(id: string) => planningStore.removeEpargne(planningId, id)}
+                  />
+                </div>
+              </CardDescription>
+
+              <CardContent className="mt-6">
+                <p className="text-sm text-muted-foreground">
+                  Vous pouvez étendre ce tableau pour afficher les transactions ou les totaux.
+                </p>
+              </CardContent>
+            </Card>
+            )}
+          </TabsContent>
         </Tabs>
       )}
     </>

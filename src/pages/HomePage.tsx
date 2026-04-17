@@ -32,6 +32,12 @@ export default function HomePage() {
     return "boards"
   }, [location.pathname])
 
+  useEffect(() => {
+    if (!["/", "/caisse", "/divers", "/source"].includes(location.pathname)) {
+      navigate("/")
+    }
+  }, [location.pathname, navigate])
+
   const onChangeTab = (value: string) => {
     if (value === "boards") {
       navigate("/")

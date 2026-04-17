@@ -1,7 +1,5 @@
 export * from "./SidebarSection"
 export * from "./DashboardHeaderSection"
-export * from "./PlanningTabs"
-export * from "./PlanningContent"
 export * from "./BudgetSection"
 export * from "./DepenseSection"
 export * from "./EpargneSection"

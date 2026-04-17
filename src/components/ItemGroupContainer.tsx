@@ -7,14 +7,16 @@ import {
   ItemGroup,
   ItemTitle,
 } from "@/components/ui/item"
-import { type Budget, type Depense, type Epargne } from '../store/planning'
 import { Button } from "./ui/button";
 import { Trash } from "lucide-react";
+import TextEditable from "./TextEditable";
 
-type ItemWithActions = (Partial<Budget | Depense | Epargne>) & {
+type ItemWithActions = {
   title?: string;
-  onUpdate?: (id: string, data: Partial<Budget | Depense | Epargne>) => void
-  onDelete?: (id: string) => void
+  amount?: number;
+  commentaire?: string;
+  onUpdate?: (data: { title?: string; amount?: number; commentaire?: string }) => void;
+  onDelete?: () => void;
 }
 
 export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
@@ -25,18 +27,40 @@ export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
           <ItemContent className="gap-1">
             <ItemTitle className="w-full flex items-center justify-between">
               <span>{item.title}</span>
-              <span>{item.amount}F</span>
+              {item.onUpdate ? (
+                <TextEditable
+                  value={item.amount?.toString() || "0"}
+                  onSave={(value) => item.onUpdate!({ amount: parseFloat(value) || 0 })}
+                  type="number"
+                  className="text-right"
+                >
+                  <span>{item.amount}F</span>
+                </TextEditable>
+              ) : (
+                <span>{item.amount}F</span>
+              )}
             </ItemTitle>
             {item.commentaire && (
-              <ItemDescription className="text-xs">{item.commentaire}</ItemDescription>
+              <ItemDescription className="text-xs">
+                {item.onUpdate ? (
+                  <TextEditable
+                    value={item.commentaire}
+                    onSave={(value) => item.onUpdate!({ commentaire: value })}
+                  >
+                    {item.commentaire}
+                  </TextEditable>
+                ) : (
+                  item.commentaire
+                )}
+              </ItemDescription>
             )}
           </ItemContent>
           <ItemActions>
-            {item.onDelete && item.id && (
+            {item.onDelete && (
               <Button
                 variant="destructive"
                 size="icon"
-                onClick={() => item.onDelete!(item.id!)}
+                onClick={() => item.onDelete!()}
               >
                 <Trash className="size-4" />
               </Button>

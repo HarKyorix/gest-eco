@@ -26,13 +26,14 @@ export interface Field {
   defaultValue?: string
   type: 'text' | 'number' | 'select'
   options?: Option[] // Only for select type
+  multiple?: boolean // For select type
 }
 
 interface DialogFormProps {
   title: string
   description?: string
   fields: Field[]
-  onSubmit: (data: Record<string, string>) => void
+  onSubmit: (data: Record<string, string | string[]>) => void
   children?: React.ReactNode
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -45,13 +46,21 @@ export function DialogForm({title, description, fields, onSubmit, children, open
       <form onSubmit={(e) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const data: Record<string, string> = {};
+        const data: Record<string, string | string[]> = {};
         formData.forEach((value, key) => {
-          data[key] = value.toString();
+          if (data[key]) {
+            if (Array.isArray(data[key])) {
+              (data[key] as string[]).push(value.toString());
+            } else {
+              data[key] = [data[key] as string, value.toString()];
+            }
+          } else {
+            data[key] = value.toString();
+          }
         });
         onSubmit(data);
       }}>
-        {children && <DialogTrigger render={<Button variant="outline">{children}</Button>} />}
+        {children && <DialogTrigger>{children}</DialogTrigger>}
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -67,7 +76,7 @@ export function DialogForm({title, description, fields, onSubmit, children, open
               return field.type === 'select' ? (
                 <Field key={index}>
                   <Label htmlFor={field.id}>{field.label}</Label>
-                  <select id={field.id} name={field.name} defaultValue={fieldValue}>
+                  <select id={field.id} name={field.name} multiple={field.multiple} defaultValue={fieldValue}>
                     {field.options?.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
@@ -82,7 +91,7 @@ export function DialogForm({title, description, fields, onSubmit, children, open
             })}
           </FieldGroup>
           <DialogFooter>
-            <DialogClose render={<Button variant="outline">Cancel</Button>} />
+            <DialogClose><Button variant="outline">Cancel</Button></DialogClose>
             <Button type="submit">Save changes</Button>
           </DialogFooter>
         </DialogContent>
