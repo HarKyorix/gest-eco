@@ -154,12 +154,14 @@ export const usePlanningStore = create<PlanningState>()(
       },
 
       addDepense: (planningId: string, depense: Partial<Depense>) => {
+        const planning = get().list.find((p) => p.id === planningId);
+        const maxPosition = planning?.depenses.reduce((max, d) => Math.max(max, d.position || 0), 0) || 0;
         const newDepense: Depense = {
           id: crypto.randomUUID(),
           amount: depense.amount || 0,
           diversId: depense.diversId || "",
           commentaire: depense.commentaire || "",
-          position: depense.position || get().getPosition() + 1,
+          position: depense.position || maxPosition + 1,
           createdAt: new Date(),
           updatedAt: new Date(),
         };
@@ -208,12 +210,14 @@ export const usePlanningStore = create<PlanningState>()(
         })),
 
       addEpargne: (planningId: string, epargne: Partial<Epargne>) => {
+        const planning = get().list.find((p) => p.id === planningId);
+        const maxPosition = planning?.epargnes.reduce((max, e) => Math.max(max, e.position || 0), 0) || 0;
         const newEpargne: Epargne = {
           id: crypto.randomUUID(),
           amount: epargne.amount || 0,
           caisseId: epargne.caisseId || "",
           commentaire: epargne.commentaire || "",
-          position: epargne.position || get().getPosition() + 1,
+          position: epargne.position || maxPosition + 1,
           createdAt: new Date(),
           updatedAt: new Date(),
         };
@@ -262,12 +266,14 @@ export const usePlanningStore = create<PlanningState>()(
         })),
 
       addBudget: (planningId: string, budget: Partial<Budget>) => {
+        const planning = get().list.find((p) => p.id === planningId);
+        const maxPosition = planning?.budgets.reduce((max, b) => Math.max(max, b.position || 0), 0) || 0;
         const newBudget: Budget = {
           id: crypto.randomUUID(),
           amount: budget.amount || 0,
           sourceId: budget.sourceId || "",
           commentaire: budget.commentaire || "",
-          position: budget.position || get().getPosition() + 1,
+          position: budget.position || maxPosition + 1,
           createdAt: new Date(),
           updatedAt: new Date(),
         };

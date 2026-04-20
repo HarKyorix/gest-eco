@@ -101,6 +101,8 @@ export function DialogForm({ open, title, description, fields, close, submit, in
                         placeholder="0"
                         max={field.max}
                         min={field.min || "0"}
+                        step="0.01"
+                        required
                       />
                     </Field>
                   );

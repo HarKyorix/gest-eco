@@ -1,4 +1,4 @@
-// src/store/planning.ts
+// src/store/db/board.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -44,9 +44,9 @@ export const useBoardStore = create<BoardState>()(
       },
       getOne: (id: string) => {
         const list = get().list;
-        return list.find((caisse) => caisse.id === id);
+        return list.find((board) => board.id === id);
       },
-      // Remove a caisse item from the list
+      // Remove a board item from the list
       remove: (id: string) => set((state) => ({ list: state.list.filter((board) => board.id !== id) })),
       // Add a new board item to the list
       add: (board: Partial<Board>) => set((state) => {

@@ -33,7 +33,7 @@ export function EpargneSection({ currentEpargneMax, currency, caisses, epargnes,
             title: caisses.find((c) => c.id === epargne.caisseId)?.title || `Épargne ${epargne.id.slice(0, 8)}`,
             amount: epargne.amount,
             commentaire: epargne.commentaire,
-            onUpdate: (data) => updateEpargne(epargne.id, { amount: data.amount, commentaire: data.commentaire }),
+            onUpdate: (data) => updateEpargne(epargne.id, { ...data }),
             onDelete: () => deleteEpargne(epargne.id),
           }))}
         />

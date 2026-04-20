@@ -1,4 +1,4 @@
-// src/store/planning.ts
+// src/store/db/caisse.ts
 import { fields } from "@/helper/formField";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";

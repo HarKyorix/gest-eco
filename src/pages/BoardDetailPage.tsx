@@ -3,10 +3,10 @@ import { ArrowLeft, Plus, Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { usePlanningStore, type Budget, type Depense, type Epargne, type Planning } from "@/store/db/planning"
 import { useSourceStore } from "@/store/db/source"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { BudgetSection, DepenseSection, EpargneSection } from "@/components/sections"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import TextEditable from "@/components/TextEditable"
 import { useDiversStore } from "@/store/db/divers"
 import { useCaisseStore } from "@/store/db/caisse"
@@ -14,6 +14,9 @@ import { useAppStore } from "@/store/app.store"
 import { useBoardStore, type Board } from "@/store/db/board"
 import { useSettingStore } from "@/store/setting.store"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { BudgetAlert } from "@/components/BudgetAlert"
+import { useDataExportImport } from "@/lib/exportImport"
+import { ExportImportButtons } from "@/components/ExportImportButtons"
 
 export default function BoardDetailPage() {
   const { boardId, planningId } = useParams<{ boardId?: string; planningId?: string }>()
@@ -27,6 +30,8 @@ export default function BoardDetailPage() {
   const appStore = useAppStore()
   const settingStore = useSettingStore()
   const navigate = useNavigate()
+  const { exportData, importData } = useDataExportImport()
+  const [isImporting, setIsImporting] = useState(false)
 
   const currentBoard = useMemo(() => boardId ? boardStore.getOne(boardId) : null, [boardId, boardStore])
   const plannings = useMemo(() => planningStore.getList(boardId), [boardId, planningStore])
@@ -82,6 +87,59 @@ export default function BoardDetailPage() {
     }
   }
 
+  const handleExport = () => {
+    exportData(
+      boardStore.getList(),
+      planningStore.getList(),
+      caisseStore.getList(),
+      sourceStore.getList(),
+      diversStore.getList(),
+      settingStore
+    )
+    appStore.openDialog({
+      title: "Données exportées",
+      description: "Vos données ont été exportées avec succès",
+      onConfirm: () => {},
+    })
+  }
+
+  const handleImport = async (file: File) => {
+    try {
+      setIsImporting(true)
+      const data = await importData(file)
+      
+      // Effacer les données existantes
+      boardStore.clear()
+      planningStore.clear()
+      caisseStore.clear()
+      sourceStore.clear()
+      diversStore.clear()
+
+      // Importer les nouvelles données
+      data.boards.forEach((board) => boardStore.add(board))
+      data.plannings.forEach((planning) => planningStore.add(planning))
+      data.caisses.forEach((caisse) => caisseStore.add(caisse))
+      data.sources.forEach((source) => sourceStore.add(source))
+      data.divers.forEach((divers) => diversStore.add(divers))
+
+      appStore.openDialog({
+        title: "Données importées",
+        description: "Vos données ont été importées avec succès",
+        onConfirm: () => {
+          window.location.reload()
+        },
+      })
+    } catch (error) {
+      appStore.openDialog({
+        title: "Erreur d'importation",
+        description: `${error instanceof Error ? error.message : "Erreur lors de l'importation"}`,
+        onConfirm: () => {},
+      })
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
   // Vérifier que les paramètres requis sont présents
   if (!boardId || !planningId) {
     return <div>Paramètres manquants</div>
@@ -105,15 +163,21 @@ export default function BoardDetailPage() {
         ) : (
           <p className="text-2xl font-semibold">Tableau non trouvé</p>
         )}
-        <Button
-          variant="outline"
-          size="icon"
-          className="ml-auto"
-          onClick={() => handleAddPlanning()}
-        >
-          <Plus className="size-4" />
-          <span className="sr-only">Ajouter un planning</span>
-        </Button>
+        <div className="ml-auto flex gap-2">
+          <ExportImportButtons
+            onExport={handleExport}
+            onImport={handleImport}
+            disabled={isImporting}
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleAddPlanning()}
+          >
+            <Plus className="size-4" />
+            <span className="sr-only">Ajouter un planning</span>
+          </Button>
+        </div>
       </div>
       
       {plannings.length === 0 ? (
@@ -157,6 +221,16 @@ export default function BoardDetailPage() {
                       <p className="text-sm text-muted-foreground">{currentPlanning?.commentaire || "Aucun commentaire"}</p>
                     </TextEditable>
                   </div>
+                </CardTitle>
+                <CardDescription>
+                  <BudgetAlert
+                    budgetTotal={currentBudgetTotal}
+                    depenseTotal={currentDepenseTotal}
+                    epargneTotal={currentEpargneTotal}
+                    currency={settingStore.currency}
+                  />
+                </CardDescription>
+                <CardAction>
                   <Button
                     variant="destructive"
                     size="icon"
@@ -168,9 +242,8 @@ export default function BoardDetailPage() {
                   >
                     <Trash className="size-4" />
                   </Button>
-                </CardTitle>
+                </CardAction>
               </CardHeader>
-
               <CardContent className="max-h-[30vh] overflow-y-auto px-4">
                 <div className="mt-4 grid gap-4 xl:grid-cols-3">
                   <BudgetSection 
@@ -206,7 +279,7 @@ export default function BoardDetailPage() {
                       title: "Ajouter une dépense",
                       description: "Entrez les détails de la nouvelle dépense",
                       fields: [
-                        { id: "amount", name: "amount", label: "Montant", type: "number", max: currentBudgetTotal.toString() },
+                        { id: "amount", name: "amount", label: "Montant", type: "number", max: Math.max(0, currentBudgetTotal - currentDepenseTotal).toString(), min: "0" },
                         { id: "diversId", name: "diversId", label: "Divers", type: "select", options: diversStore.getList().map(d => ({ label: d.title, value: d.id })) }
                       ],
                       onSubmit: (formData) => planningStore.addDepense(planningId, { amount: parseFloat(formData.amount as string), diversId: formData.diversId as string })
@@ -227,7 +300,7 @@ export default function BoardDetailPage() {
                         title: "Ajouter une épargne",
                         description: "Entrez les détails de la nouvelle épargne",
                         fields: [
-                          { id: "amount", name: "amount", label: "Montant", type: "number", max: currentEpargneMax.toString() },
+                          { id: "amount", name: "amount", label: "Montant", type: "number", max: Math.max(0, currentEpargneMax).toString(), min: "0" },
                           { id: "caisseId", name: "caisseId", label: "Caisse", type: "select", options: caisseStore.getList().map(c => ({ label: c.title, value: c.id })) }
                         ],
                         onSubmit: (formData) => planningStore.addEpargne(planningId, { amount: parseFloat(formData.amount as string), caisseId: formData.caisseId as string })

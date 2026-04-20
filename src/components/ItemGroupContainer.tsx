@@ -21,7 +21,7 @@ type ItemWithActions = {
 
 export function ItemGroupContainer({ currency, list }: { currency?: string; list: ItemWithActions[] }) {
   return (
-    <ItemGroup className="max-w-sm">
+    <ItemGroup className="w-full">
       {list.map((item, index) => (
         <Item key={index} variant="outline" className="flex items-start border-1 rounded-xl border-muted">
           <ItemContent className="gap-1">
