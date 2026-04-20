@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Plus, Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { usePlanningStore, type Budget, type Depense, type Epargne } from "@/store/db/planning"
+import { usePlanningStore, type Budget, type Depense, type Epargne, type Planning } from "@/store/db/planning"
 import { useSourceStore } from "@/store/db/source"
 import { useEffect, useMemo } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -33,7 +33,8 @@ export default function BoardDetailPage() {
   const currentPlanning = useMemo(() => planningId ? planningStore.getOne({ id: planningId }) : null, [planningId, planningStore])
   const currentBudgetTotal = useMemo(() => currentPlanning?.budgets.reduce((total, b) => total + b.amount, 0) ?? 0, [currentPlanning])
   const currentDepenseTotal = useMemo(() => currentPlanning?.depenses.reduce((total, d) => total + d.amount, 0) ?? 0, [currentPlanning])
-  const currentEpargneMax = useMemo(() => currentBudgetTotal - currentDepenseTotal, [currentBudgetTotal, currentDepenseTotal])
+  const currentEpargneTotal = useMemo(() => currentPlanning?.epargnes.reduce((total, e) => total + e.amount, 0) ?? 0, [currentPlanning])
+  const currentEpargneMax = useMemo(() => currentBudgetTotal - currentDepenseTotal - currentEpargneTotal, [currentBudgetTotal, currentDepenseTotal, currentEpargneTotal])
 
   // Calcul des totaux par caisse pour tous les plannings du board
   const caisseTotals = useMemo(() => {
@@ -63,6 +64,17 @@ export default function BoardDetailPage() {
       navigate(`/board/${boardId}/${plannings[0]?.id ?? ""}`)
     }
   }, [planningStore, planningId, boardId, navigate, plannings])
+
+  const handleAddPlanning = () => {
+    const newPlanning: Partial<Planning> = { 
+      title: `Nouveau planning ${plannings.length + 1}`, 
+      boardId: boardId ?? undefined,
+      budgets: currentPlanning?.budgets || [],
+      depenses: currentPlanning?.depenses || [],
+      epargnes: currentPlanning?.epargnes || [],
+    }
+    planningStore.add(newPlanning)
+  }
 
   const handleUpdateBoard = (data: Partial<Board>) => {
     if (boardId) {
@@ -97,7 +109,7 @@ export default function BoardDetailPage() {
           variant="outline"
           size="icon"
           className="ml-auto"
-          onClick={() => planningStore.add({ title: `Nouveau planning ${plannings.length + 1}`, boardId: boardId ?? undefined })}
+          onClick={() => handleAddPlanning()}
         >
           <Plus className="size-4" />
           <span className="sr-only">Ajouter un planning</span>
@@ -245,14 +257,14 @@ export default function BoardDetailPage() {
                           <TableRow key={index} className="text-left">
                             <TableCell className="text-left font-medium">{item.caisseTitle}</TableCell>
                             <TableCell className="text-right font-semibold">
-                              {item.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                              {item.total} {settingStore.currency}
                             </TableCell>
                           </TableRow>
                         ))}
                         <TableRow className="border-t-2">
                           <TableCell className="text-left font-bold">Total général</TableCell>
                           <TableCell className="text-right font-bold">
-                            {caisseTotals.reduce((sum, item) => sum + item.total, 0).toLocaleString('fr-FR', { style: 'currency', currency: settingStore.currency })}
+                            {caisseTotals.reduce((sum, item) => sum + item.total, 0)} {settingStore.currency}
                           </TableCell>
                         </TableRow>
                       </TableBody>

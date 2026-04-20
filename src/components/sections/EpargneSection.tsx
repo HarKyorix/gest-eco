@@ -42,7 +42,7 @@ export function EpargneSection({ currentEpargneMax, currency, caisses, epargnes,
         <p className="text-xs text-muted-foreground">
           {currentEpargneMax ? (
             <>
-              Total actuel : <span className="font-medium">{currentEpargneMax} {currency}</span>
+              Total restant : <span className="font-medium">{currentEpargneMax} {currency}</span>
             </>
           ) : (
             <>Aucune épargne définie pour cette période.</>
