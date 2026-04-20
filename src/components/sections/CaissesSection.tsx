@@ -2,7 +2,7 @@ import { Edit, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { Caisse } from "@/store/caisse"
+import type { Caisse } from "@/store/db/caisse"
 
 interface CaissesSectionProps {
   display?: 'list' | 'grid';
@@ -13,10 +13,6 @@ interface CaissesSectionProps {
 }
 
 export function CaissesSection({ display = 'grid', caisses, onAdd, onEdit, onDelete }: CaissesSectionProps) {
-  const containerClassName = display === 'grid'
-    ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
-    : 'space-y-4'
-
   return (
     <div className="space-y-4 mt-6">
       <div className="flex justify-between items-center">
@@ -27,7 +23,7 @@ export function CaissesSection({ display = 'grid', caisses, onAdd, onEdit, onDel
       </div>
 
       {display === 'grid' ? (
-        <div className={containerClassName}>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {caisses.map((caisse) => (
             <Card key={caisse.id} className="flex flex-col">
               <CardHeader className="flex-1">

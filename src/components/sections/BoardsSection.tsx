@@ -2,7 +2,7 @@ import { ArrowRight, Edit, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import type { Board } from "@/store/board"
+import type { Board } from "@/store/db/board"
 
 interface BoardsSectionProps {
   display?: 'list' | 'grid';
@@ -15,10 +15,6 @@ interface BoardsSectionProps {
 }
 
 export function BoardsSection({ display = 'grid', boards, onAdd, onNavigateList, onNavigate, onEdit, onDelete }: BoardsSectionProps) {
-  const containerClassName = display === 'grid'
-    ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
-    : 'space-y-4'
-
   return (
     <div className="space-y-4 mt-6">
       <div className="flex justify-between items-center">
@@ -40,7 +36,7 @@ export function BoardsSection({ display = 'grid', boards, onAdd, onNavigateList,
       </div>
 
       {display === 'grid' ? (
-        <div className={containerClassName}>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {boards.map((board) => (
             <Card key={board.id} className="flex flex-col">
               <CardHeader className="flex-1">
@@ -96,13 +92,6 @@ export function BoardsSection({ display = 'grid', boards, onAdd, onNavigateList,
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => onNavigate(board.id)}
-                    >
-                      <ArrowRight className="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
                       onClick={() => onEdit(board)}
                     >
                       <Edit className="size-4" />
@@ -113,6 +102,13 @@ export function BoardsSection({ display = 'grid', boards, onAdd, onNavigateList,
                       onClick={() => onDelete(board)}
                     >
                       <Trash2 className="size-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => onNavigate(board.id)}
+                    >
+                      <ArrowRight className="size-4" />
                     </Button>
                   </div>
                 </TableCell>

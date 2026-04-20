@@ -2,8 +2,8 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { ItemGroupContainer } from "@/components/ItemGroupContainer"
 import { Button } from "@/components/ui/button"
-import { type Depense } from "@/store/planning"
-import type { Divers } from "@/store/divers"
+import { type Depense } from "@/store/db/planning"
+import type { Divers } from "@/store/db/divers"
 
 interface DepenseSectionProps {
   divers: Divers[]

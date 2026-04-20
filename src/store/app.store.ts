@@ -17,7 +17,7 @@ export interface AppState {
     fields: Field[];
     initialData?: Record<string, unknown>;
     onSubmit: (data: Record<string, string | string[]>) => void;
-  }
+  };
 
   openDialog: (params: { title: string; description?: string; onConfirm?: () => void }) => void;
   closeDialog: () => void;
@@ -26,6 +26,7 @@ export interface AppState {
   openForm: (params: { title: string; description?: string; fields: Field[]; initialData?: Record<string, unknown>; onSubmit: (data: Record<string, string | string[]>) => void }) => void;
   closeForm: () => void;
   submitForm: (data: Record<string, string | string[]>) => void;
+
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -34,6 +35,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     title: "",
     description: undefined,
     onConfirm: undefined,
+  },
+  form: {
+    open: false,
+    title: "",
+    description: undefined,
+    fields: [],
+    initialData: undefined,
+    onSubmit: () => {},
+  },
+  preferances: {
+    theme: 'system',
+    displayMode: 'grid',
+    displaySidebar: true,
   },
 
   openDialog: ({ title, description, onConfirm }) => {
@@ -62,15 +76,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { onConfirm } = get().alert;
     onConfirm?.();
     get().closeDialog();
-  },
-
-  form: {
-    open: false,
-    title: "",
-    description: undefined,
-    fields: [],
-    initialData: undefined,
-    onSubmit: () => {},
   },
 
   openForm: ({ title, description, fields, initialData, onSubmit }) => {
@@ -103,5 +108,5 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { onSubmit } = get().form;
     onSubmit(data);
     get().closeForm();
-  }
+  },
 }));

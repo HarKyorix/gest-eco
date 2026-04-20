@@ -1,5 +1,3 @@
-export * from "./SidebarSection"
-export * from "./DashboardHeaderSection"
 export * from "./BudgetSection"
 export * from "./DepenseSection"
 export * from "./EpargneSection"

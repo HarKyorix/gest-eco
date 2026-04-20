@@ -1,16 +1,15 @@
-import { useBoardStore } from "@/store/board"
-import { useCaisseStore } from "@/store/caisse"
-import { useDiversStore } from "@/store/divers"
-import { useSourceStore } from "@/store/source"
+import { useBoardStore } from "@/store/db/board"
+import { useCaisseStore } from "@/store/db/caisse"
+import { useDiversStore } from "@/store/db/divers"
+import { useSourceStore } from "@/store/db/source"
 import { useNavigate, useLocation } from "react-router-dom"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AlertDialogDestructive } from "@/components/AlertDialogDestructive"
-import { DialogForm } from "@/components/DialogForm"
 import { useAppStore } from "@/store/app.store"
 import { BoardsSection, CaissesSection, DiversSection, SourcesSection } from "@/components/sections"
 import { Grid, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useSettingStore } from "@/store/setting.store"
 
 export default function HomePage() {
   const boardStore = useBoardStore()
@@ -19,10 +18,10 @@ export default function HomePage() {
   const sourceStore = useSourceStore()
 
   const appStore = useAppStore()
+  const settingStore = useSettingStore()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [displayMode, setDisplayMode] = useState<'list' | 'grid'>('grid')
 
   const activeTab = useMemo(() => {
     const path = location.pathname.toLowerCase()
@@ -89,16 +88,16 @@ export default function HomePage() {
         <div className="mb-6">
           <div className="flex gap-2 mt-4 ml-auto w-max"> 
             <Button
-              variant={displayMode === 'grid' ? 'default' : 'outline'}
+              variant={settingStore.displayMode === 'grid' ? 'default' : 'outline'}
               size="icon"
-              onClick={() => setDisplayMode('grid')}
+              onClick={() => settingStore.setPreferances('displayMode', 'grid')}
             >
               <Grid className="size-4" />
             </Button>
             <Button
-              variant={displayMode === 'list' ? 'default' : 'outline'}
+              variant={settingStore.displayMode === 'list' ? 'default' : 'outline'}
               size="icon"
-              onClick={() => setDisplayMode('list')}
+              onClick={() => settingStore.setPreferances('displayMode', 'list')}
             >
               <List className="size-4" />
             </Button>
@@ -119,7 +118,7 @@ export default function HomePage() {
 
           <TabsContent value="boards" className="space-y-4 mt-6">
             <BoardsSection
-              display={displayMode}
+              display={settingStore.displayMode}
               boards={boardStore.list}
               onAdd={onAddBoard}
               onNavigateList={() => navigate("/board")}
@@ -141,7 +140,7 @@ export default function HomePage() {
 
           <TabsContent value="caisses" className="space-y-4 mt-6">
             <CaissesSection
-              display={displayMode}
+              display={settingStore.displayMode}
               caisses={caisseStore.list}
               onAdd={onAddCaisse}
               onEdit={(caisse) => appStore.openForm({
@@ -161,7 +160,7 @@ export default function HomePage() {
 
           <TabsContent value="divers" className="space-y-4 mt-6">
             <DiversSection
-              display={displayMode}
+              display={settingStore.displayMode}
               diversList={diversStore.list}
               onAdd={onAddDivers}
               onEdit={(divers) => appStore.openForm({
@@ -181,7 +180,7 @@ export default function HomePage() {
 
           <TabsContent value="sources" className="space-y-4 mt-6">
             <SourcesSection
-              display={displayMode}
+              display={settingStore.displayMode}
               sources={sourceStore.list}
               onAdd={onAddSource}
               onEdit={(source) => appStore.openForm({
@@ -200,24 +199,6 @@ export default function HomePage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      <DialogForm
-        open={appStore.form.open}
-        title={appStore.form.title}
-        description={appStore.form.description}
-        fields={appStore.form.fields}
-        initialData={appStore.form.initialData}
-        close={() => appStore.closeForm()}
-        submit={(data) => appStore.submitForm(data)}
-      />
-
-      <AlertDialogDestructive
-        open={appStore.alert.open}
-        title={appStore.alert.title}
-        description={appStore.alert.description}
-        close={() => appStore.closeDialog()}
-        confirm={() => appStore.confirmDialog()}
-      />
     </div>
   )
 }

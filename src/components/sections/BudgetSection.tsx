@@ -1,8 +1,8 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { ItemGroupContainer } from "@/components/ItemGroupContainer"
-import { type Budget } from "@/store/planning"
-import type { Source } from "@/store/source"
+import { type Budget } from "@/store/db/planning"
+import type { Source } from "@/store/db/source"
 import { Button } from "../ui/button"
 
 interface BudgetSectionProps {

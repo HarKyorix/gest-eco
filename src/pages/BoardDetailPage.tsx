@@ -1,32 +1,43 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Trash } from "lucide-react"
+import { ArrowLeft, Plus, Trash } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { usePlanningStore, type Budget, type Depense, type Epargne } from "@/store/planning"
-import { useSourceStore } from "@/store/source"
-import { useEffect } from "react"
+import { usePlanningStore, type Budget, type Depense, type Epargne } from "@/store/db/planning"
+import { useSourceStore } from "@/store/db/source"
+import { useEffect, useMemo } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { BudgetSection, DepenseSection, EpargneSection } from "@/components/sections"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import TextEditable from "@/components/TextEditable"
-import { useDiversStore } from "@/store/divers"
-import { useCaisseStore } from "@/store/caisse"
+import { useDiversStore } from "@/store/db/divers"
+import { useCaisseStore } from "@/store/db/caisse"
 import { useAppStore } from "@/store/app.store"
-import { DialogForm } from "@/components/DialogForm"
+import { useBoardStore, type Board } from "@/store/db/board"
+import { useSettingStore } from "@/store/setting.store"
 
 export default function BoardDetailPage() {
+  const boardStore = useBoardStore()
   const planningStore = usePlanningStore()
   const sourceStore = useSourceStore()
   const diversStore = useDiversStore()
   const caisseStore = useCaisseStore()
+  
   const appStore = useAppStore()
+  const settingStore = useSettingStore()
   const navigate = useNavigate()
   const { boardId, planningId } = useParams<{ boardId?: string; planningId?: string }>()
+  
+  const currentBoard = useMemo(() => {
+    if (boardId) {
+      return boardStore.getOne(boardId)
+    }
+    return null
+  }, [boardId, boardStore])
 
-  const plannings = planningStore.getList(boardId ?? undefined)
-  const currentPlanning = planningId ? planningStore.getOne({ id: planningId }) : undefined
-  const currentBudgetTotal = currentPlanning?.budgets.reduce((total, b) => total + b.amount, 0) ?? 0
-  const currentDepenseTotal = currentPlanning?.depenses.reduce((total, d) => total + d.amount, 0) ?? 0
-  const currentEpargneMax = currentBudgetTotal - currentDepenseTotal
+  const plannings = useMemo(() => planningStore.getList(boardId ?? undefined), [boardId, planningStore])
+  const currentPlanning = useMemo(() =>  planningStore.getOne({ id: planningId }), [planningId, planningStore])
+  const currentBudgetTotal = useMemo(() => currentPlanning?.budgets.reduce((total, b) => total + b.amount, 0) ?? 0, [currentPlanning])
+  const currentDepenseTotal = useMemo(() => currentPlanning?.depenses.reduce((total, d) => total + d.amount, 0) ?? 0, [currentPlanning])
+  const currentEpargneMax = useMemo(() => currentBudgetTotal - currentDepenseTotal, [currentBudgetTotal, currentDepenseTotal])
 
   useEffect(() => {
     if (boardId && plannings.length === 0) {
@@ -36,8 +47,41 @@ export default function BoardDetailPage() {
     }
   }, [planningStore, planningId, boardId, navigate, plannings])
 
+  const handleUpdateBoard = (data: Partial<Board>) => {
+    if (boardId) {
+      boardStore.update(boardId, data)
+    }
+  }
+
   return (
     <>
+      <div className="flex items-center gap-4 my-4">
+        { !settingStore.displaySidebar && (
+          <Button variant="outline" onClick={() => navigate("/board")} size="icon">
+            <ArrowLeft className="size-4" />
+          </Button>
+        )}
+        { currentBoard ? (
+          <TextEditable
+            value={currentBoard.title}
+            onSave={(value: string) => handleUpdateBoard({ title: value })}
+          >
+            <p className="text-2xl font-semibold">{currentBoard.title}</p>
+          </TextEditable>
+        ) : (
+          <p className="text-2xl font-semibold">Tableau non trouvé</p>
+        )}
+        <Button
+          variant="outline"
+          size="icon"
+          className="ml-auto"
+          onClick={() => planningStore.add({ title: `Nouveau planning ${plannings.length + 1}`, boardId: boardId ?? undefined })}
+        >
+          <Plus className="size-4" />
+          <span className="sr-only">Ajouter un planning</span>
+        </Button>
+      </div>
+      
       {plannings.length === 0 ? (
         <div className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">Chargement des plannings...</p>
@@ -53,15 +97,6 @@ export default function BoardDetailPage() {
           }}
           className="mt-6 flex-1 flex-col"
         >
-          <Button
-            variant="outline"
-            size="icon"
-            className="ml-auto mb-4"
-            onClick={() => planningStore.add({ title: `Nouveau planning ${plannings.length + 1}`, boardId: boardId ?? undefined })}
-          >
-            <Plus className="size-4" />
-            <span className="sr-only">Ajouter un planning</span>
-          </Button>
           <TabsList className="w-full flex justify-start gap-2 overflow-x-auto">
             {plannings.map((planning) => (
               <TabsTrigger key={planning.id} value={planning.id} className="flex-none py-2">
@@ -178,19 +213,6 @@ export default function BoardDetailPage() {
           </TabsContent>
         </Tabs>
       )}
-      <DialogForm
-        open={appStore.form.open}
-        title={appStore.form.title}
-        description={appStore.form.description}
-        fields={appStore.form.fields}
-        close={() => appStore.closeForm()}
-        submit={(data) => {
-          if (appStore.form.onSubmit) {
-            appStore.form.onSubmit(data)
-          }
-          appStore.closeForm()
-        }}
-      />
     </>
   )
 }
