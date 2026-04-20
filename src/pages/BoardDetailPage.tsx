@@ -6,15 +6,18 @@ import { useSourceStore } from "@/store/db/source"
 import { useEffect, useMemo } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { BudgetSection, DepenseSection, EpargneSection } from "@/components/sections"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import TextEditable from "@/components/TextEditable"
 import { useDiversStore } from "@/store/db/divers"
 import { useCaisseStore } from "@/store/db/caisse"
 import { useAppStore } from "@/store/app.store"
 import { useBoardStore, type Board } from "@/store/db/board"
 import { useSettingStore } from "@/store/setting.store"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 export default function BoardDetailPage() {
+  const { boardId, planningId } = useParams<{ boardId?: string; planningId?: string }>()
+
   const boardStore = useBoardStore()
   const planningStore = usePlanningStore()
   const sourceStore = useSourceStore()
@@ -24,20 +27,34 @@ export default function BoardDetailPage() {
   const appStore = useAppStore()
   const settingStore = useSettingStore()
   const navigate = useNavigate()
-  const { boardId, planningId } = useParams<{ boardId?: string; planningId?: string }>()
-  
-  const currentBoard = useMemo(() => {
-    if (boardId) {
-      return boardStore.getOne(boardId)
-    }
-    return null
-  }, [boardId, boardStore])
 
-  const plannings = useMemo(() => planningStore.getList(boardId ?? undefined), [boardId, planningStore])
-  const currentPlanning = useMemo(() =>  planningStore.getOne({ id: planningId }), [planningId, planningStore])
+  const currentBoard = useMemo(() => boardId ? boardStore.getOne(boardId) : null, [boardId, boardStore])
+  const plannings = useMemo(() => planningStore.getList(boardId), [boardId, planningStore])
+  const currentPlanning = useMemo(() => planningId ? planningStore.getOne({ id: planningId }) : null, [planningId, planningStore])
   const currentBudgetTotal = useMemo(() => currentPlanning?.budgets.reduce((total, b) => total + b.amount, 0) ?? 0, [currentPlanning])
   const currentDepenseTotal = useMemo(() => currentPlanning?.depenses.reduce((total, d) => total + d.amount, 0) ?? 0, [currentPlanning])
   const currentEpargneMax = useMemo(() => currentBudgetTotal - currentDepenseTotal, [currentBudgetTotal, currentDepenseTotal])
+
+  // Calcul des totaux par caisse pour tous les plannings du board
+  const caisseTotals = useMemo(() => {
+    const totals: Record<string, { caisseTitle: string; total: number }> = {}
+
+    // Initialiser avec toutes les caisses
+    caisseStore.getList().forEach(caisse => {
+      totals[caisse.id] = { caisseTitle: caisse.title, total: 0 }
+    })
+
+    // Calculer les totaux depuis tous les plannings
+    plannings.forEach(planning => {
+      planning.epargnes.forEach(epargne => {
+        if (totals[epargne.caisseId]) {
+          totals[epargne.caisseId].total += epargne.amount
+        }
+      })
+    })
+
+    return Object.values(totals).filter(item => item.total > 0)
+  }, [plannings, caisseStore])
 
   useEffect(() => {
     if (boardId && plannings.length === 0) {
@@ -53,6 +70,11 @@ export default function BoardDetailPage() {
     }
   }
 
+  // Vérifier que les paramètres requis sont présents
+  if (!boardId || !planningId) {
+    return <div>Paramètres manquants</div>
+  }
+  
   return (
     <>
       <div className="flex items-center gap-4 my-4">
@@ -95,7 +117,7 @@ export default function BoardDetailPage() {
               navigate(`/board/${boardId}/${nextPlanning.id}`)
             }
           }}
-          className="mt-6 flex-1 flex-col"
+          className="flex-1 flex-col"
         >
           <TabsList className="w-full flex justify-start gap-2 overflow-x-auto">
             {plannings.map((planning) => (
@@ -105,23 +127,22 @@ export default function BoardDetailPage() {
             ))}
           </TabsList>
 
-          <TabsContent value={planningId} className="mt-4">
-            {planningId && (
-            <Card className="mt-6">
+          <TabsContent value={planningId} className="">
+            <Card className="">
               <CardHeader>
                 <CardTitle className="flex items-start justify-between gap-4">
                   <div className="text-left">
                     <TextEditable
-                      value={planningStore.getOne({ id: planningId })?.title}
+                      value={currentPlanning?.title}
                       onSave={(value: string) => planningStore.update(planningId, { title: value })}
                     >
-                      <p className="text-lg font-semibold">{planningStore.getOne({ id: planningId })?.title}</p>
+                      <p className="text-lg font-semibold">{currentPlanning?.title}</p>
                     </TextEditable>
                     <TextEditable
-                      value={planningStore.getOne({ id: planningId })?.commentaire}
+                      value={currentPlanning?.commentaire}
                       onSave={(value: string) => planningStore.update(planningId, { commentaire: value })}
                     >
-                      <p className="text-sm text-muted-foreground">{planningStore.getOne({ id: planningId })?.commentaire || "Aucun commentaire"}</p>
+                      <p className="text-sm text-muted-foreground">{currentPlanning?.commentaire || "Aucun commentaire"}</p>
                     </TextEditable>
                   </div>
                   <Button
@@ -129,7 +150,7 @@ export default function BoardDetailPage() {
                     size="icon"
                     onClick={() => appStore.openDialog({
                       title: "Supprimer le planning",
-                      description: `Êtes-vous sûr de vouloir supprimer "${planningStore.getOne({ id: planningId })?.title}" ?`,
+                      description: `Êtes-vous sûr de vouloir supprimer "${currentPlanning?.title}" ?`,
                       onConfirm: () => planningStore.remove(planningId),
                     })}
                   >
@@ -138,10 +159,12 @@ export default function BoardDetailPage() {
                 </CardTitle>
               </CardHeader>
 
-              <CardDescription className="px-4">
+              <CardContent className="max-h-[30vh] overflow-y-auto px-4">
                 <div className="mt-4 grid gap-4 xl:grid-cols-3">
                   <BudgetSection 
-                    budgets={planningStore.getOne({ id: planningId })?.budgets || []} 
+                    currency={settingStore.currency}
+                    currentBudgetTotal={currentBudgetTotal}
+                    budgets={currentPlanning?.budgets || []} 
                     sources={sourceStore.getList()}
                     addBudget={() => appStore.openForm({
                       title: "Ajouter un budget",
@@ -163,8 +186,10 @@ export default function BoardDetailPage() {
                     })}
                   />
                   <DepenseSection 
+                    currency={settingStore.currency}
+                    currentDepenseTotal={currentDepenseTotal}
                     divers={diversStore.getList()}
-                    depenses={planningStore.getOne({ id: planningId })?.depenses || []} 
+                    depenses={currentPlanning?.depenses || []} 
                     addDepense={() => appStore.openForm({
                       title: "Ajouter une dépense",
                       description: "Entrez les détails de la nouvelle dépense",
@@ -182,8 +207,10 @@ export default function BoardDetailPage() {
                     })}
                   />
                   <EpargneSection 
+                    currency={settingStore.currency}
+                    currentEpargneMax={currentEpargneMax}
                     caisses={caisseStore.getList()}
-                    epargnes={planningStore.getOne({ id: planningId })?.epargnes || []}
+                    epargnes={currentPlanning?.epargnes || []}
                     addEpargne={() => appStore.openForm({
                         title: "Ajouter une épargne",
                         description: "Entrez les détails de la nouvelle épargne",
@@ -201,15 +228,43 @@ export default function BoardDetailPage() {
                     })}
                   />
                 </div>
-              </CardDescription>
-
-              <CardContent className="mt-6">
-                <p className="text-sm text-muted-foreground">
-                  Vous pouvez étendre ce tableau pour afficher les transactions ou les totaux.
-                </p>
               </CardContent>
+
+              <CardFooter className="mt-6">
+                <div className="w-full">
+                  {caisseTotals.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Caisse</TableHead>
+                          <TableHead className="text-right">Total épargné</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {caisseTotals.map((item, index) => (
+                          <TableRow key={index} className="text-left">
+                            <TableCell className="text-left font-medium">{item.caisseTitle}</TableCell>
+                            <TableCell className="text-right font-semibold">
+                              {item.total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="border-t-2">
+                          <TableCell className="text-left font-bold">Total général</TableCell>
+                          <TableCell className="text-right font-bold">
+                            {caisseTotals.reduce((sum, item) => sum + item.total, 0).toLocaleString('fr-FR', { style: 'currency', currency: settingStore.currency })}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">
+                      Aucune épargne enregistrée dans les caisses pour ce tableau.
+                    </p>
+                  )}
+                </div>
+              </CardFooter>
             </Card>
-            )}
           </TabsContent>
         </Tabs>
       )}

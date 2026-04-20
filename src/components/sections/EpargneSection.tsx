@@ -1,4 +1,4 @@
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { ItemGroupContainer } from "@/components/ItemGroupContainer"
 import { Button } from "@/components/ui/button"
@@ -6,6 +6,8 @@ import { type Epargne } from "@/store/db/planning"
 import type { Caisse } from "@/store/db/caisse"
 
 interface EpargneSectionProps {
+  currency?: string;
+  currentEpargneMax: number;
   caisses: Caisse[]
   epargnes: Epargne[]
   addEpargne: () => void
@@ -13,7 +15,8 @@ interface EpargneSectionProps {
   deleteEpargne: (id: string) => void
 }
 
-export function EpargneSection({ caisses, epargnes, addEpargne, updateEpargne, deleteEpargne }: EpargneSectionProps) {
+export function EpargneSection({ currentEpargneMax, currency, caisses, epargnes, addEpargne, updateEpargne, deleteEpargne }: EpargneSectionProps) {
+  
   return (
     <Card className="flex flex-col gap-4 p-4">
       <CardTitle className="flex items-center justify-between gap-2">
@@ -25,6 +28,7 @@ export function EpargneSection({ caisses, epargnes, addEpargne, updateEpargne, d
       </CardTitle>
       <CardContent className="text-sm text-muted-foreground">
         <ItemGroupContainer
+          currency={currency}
           list={epargnes.map((epargne) => ({
             title: caisses.find((c) => c.id === epargne.caisseId)?.title || `Épargne ${epargne.id.slice(0, 8)}`,
             amount: epargne.amount,
@@ -34,6 +38,17 @@ export function EpargneSection({ caisses, epargnes, addEpargne, updateEpargne, d
           }))}
         />
       </CardContent>
+      <CardFooter className="p-2">
+        <p className="text-xs text-muted-foreground">
+          {currentEpargneMax ? (
+            <>
+              Total actuel : <span className="font-medium">{currentEpargneMax} {currency}</span>
+            </>
+          ) : (
+            <>Aucune épargne définie pour cette période.</>
+          )}
+        </p>
+      </CardFooter>
     </Card>
   )
 }

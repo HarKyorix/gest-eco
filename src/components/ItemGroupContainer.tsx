@@ -19,7 +19,7 @@ type ItemWithActions = {
   onDelete?: () => void;
 }
 
-export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
+export function ItemGroupContainer({ currency, list }: { currency?: string; list: ItemWithActions[] }) {
   return (
     <ItemGroup className="max-w-sm">
       {list.map((item, index) => (
@@ -38,7 +38,7 @@ export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
                 :
                 (<span>{item.commentaire}</span>)
                 :
-                <span>{item.title}</span>
+                <span className="truncate">{item.title}</span>
               }
               {item.onUpdate ? (
                 <TextEditable
@@ -47,10 +47,10 @@ export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
                   type="number"
                   className="text-right"
                 >
-                  <span>{item.amount}F</span>
+                  <span>{item.amount} {currency}</span>
                 </TextEditable>
               ) : (
-                <span>{item.amount}F</span>
+                <span>{item.amount} {currency}</span>
               )}
             </ItemTitle>
             <ItemDescription className="text-xs">

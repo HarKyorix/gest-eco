@@ -1,4 +1,4 @@
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { ItemGroupContainer } from "@/components/ItemGroupContainer"
 import { Button } from "@/components/ui/button"
@@ -6,6 +6,8 @@ import { type Depense } from "@/store/db/planning"
 import type { Divers } from "@/store/db/divers"
 
 interface DepenseSectionProps {
+  currency?: string;
+  currentDepenseTotal: number;
   divers: Divers[]
   depenses: Depense[]
   addDepense: () => void
@@ -13,7 +15,8 @@ interface DepenseSectionProps {
   deleteDepense: (id: string) => void
 }
 
-export function DepenseSection({ divers, depenses, addDepense, updateDepense, deleteDepense }: DepenseSectionProps) {
+export function DepenseSection({ currentDepenseTotal, currency, divers, depenses, addDepense, updateDepense, deleteDepense }: DepenseSectionProps) {
+  
   return (
     <Card className="flex flex-col gap-4 p-4">
       <CardTitle className="flex items-center justify-between gap-2">
@@ -25,6 +28,7 @@ export function DepenseSection({ divers, depenses, addDepense, updateDepense, de
       </CardTitle>
       <CardContent className="text-sm text-muted-foreground">
         <ItemGroupContainer
+          currency={currency}
           list={depenses.map((depense) => ({
             title: divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
             amount: depense.amount,
@@ -34,6 +38,17 @@ export function DepenseSection({ divers, depenses, addDepense, updateDepense, de
           }))}
         />
       </CardContent>
+      <CardFooter className="p-2">
+        <p className="text-xs text-muted-foreground">
+          {currentDepenseTotal > 0 ? (
+            <>
+              Total actuel : <span className="font-medium">{currentDepenseTotal} {currency}</span>
+            </>
+          ) : (
+            <>Aucune dépense définie pour cette période.</>
+          )}
+        </p>
+      </CardFooter>
     </Card>
   )
 }

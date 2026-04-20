@@ -1,4 +1,4 @@
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { ItemGroupContainer } from "@/components/ItemGroupContainer"
 import { type Budget } from "@/store/db/planning"
@@ -6,6 +6,8 @@ import type { Source } from "@/store/db/source"
 import { Button } from "../ui/button"
 
 interface BudgetSectionProps {
+  currency?: string;
+  currentBudgetTotal: number;
   budgets: Budget[]
   sources: Source[]
   addBudget: () => void
@@ -13,7 +15,8 @@ interface BudgetSectionProps {
   deleteBudget: (id: string) => void
 }
 
-export function BudgetSection({ budgets, sources, addBudget, updateBudget, deleteBudget }: BudgetSectionProps) {
+export function BudgetSection({ currentBudgetTotal, currency, budgets, sources, addBudget, updateBudget, deleteBudget }: BudgetSectionProps) {
+  
   return (
     <Card className="flex flex-col gap-4 p-4">
       <CardTitle className="flex items-center justify-between gap-2">
@@ -29,6 +32,7 @@ export function BudgetSection({ budgets, sources, addBudget, updateBudget, delet
       </CardTitle>
       <CardContent className="text-sm text-muted-foreground">
         <ItemGroupContainer
+          currency={currency}
           list={budgets.map((budget) => ({
             title: sources.find((s) => s.id === budget.sourceId)?.title || `Budget ${budget.id.slice(0, 8)}`,
             amount: budget.amount,
@@ -38,6 +42,17 @@ export function BudgetSection({ budgets, sources, addBudget, updateBudget, delet
           }))}
         />
       </CardContent>
+      <CardFooter className="p-2">
+        <p className="text-xs text-muted-foreground">
+          {currentBudgetTotal > 0 ? (
+            <>
+              Total actuel : <span className="font-medium">{currentBudgetTotal} {currency}</span>
+            </>
+          ) : (
+            <>Aucun budget défini pour cette période.</>
+          )}
+        </p>
+      </CardFooter>
     </Card>
   )
 }

@@ -105,9 +105,9 @@ export default function BoardLayout() {
           <div className="flex items-center gap-4 border-b border-border pb-4">
             <SidebarTrigger />
             { !settingStore.displaySidebar && (
-              <Select onValueChange={(value: string) => handleGotoDetail(value)} defaultValue={boardId}>
+              <Select onValueChange={(value: string | null) => value && handleGotoDetail(value)} value={boardId || ""}>
                 <SelectTrigger>
-                  <SelectValue> {boardStore.getOne(boardId)?.title || "Sélectionner un tableau"} </SelectValue>
+                  <SelectValue> {boardId ? boardStore.getOne(boardId)?.title || "Sélectionner un tableau" : "Sélectionner un tableau"} </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {boardStore.getList().filter(b=> b.id !== boardId)?.map((board) => (
