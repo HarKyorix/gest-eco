@@ -1,28 +1,28 @@
-import { useBoardStore, type Board } from "@/store/board"
-import { useCaisseStore, type Caisse } from "@/store/caisse"
-import { useDiversStore, type Divers } from "@/store/divers"
-import { useSourceStore, type Source } from "@/store/source"
+import { useBoardStore } from "@/store/board"
+import { useCaisseStore } from "@/store/caisse"
+import { useDiversStore } from "@/store/divers"
+import { useSourceStore } from "@/store/source"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useEffect, useMemo, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, ArrowRight, Edit, Trash2 } from "lucide-react"
 import { AlertDialogDestructive } from "@/components/AlertDialogDestructive"
 import { DialogForm } from "@/components/DialogForm"
+import { useAppStore } from "@/store/app.store"
+import { BoardsSection, CaissesSection, DiversSection, SourcesSection } from "@/components/sections"
+import { Grid, List } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function HomePage() {
   const boardStore = useBoardStore()
   const caisseStore = useCaisseStore()
   const diversStore = useDiversStore()
   const sourceStore = useSourceStore()
-  const navigate = useNavigate()
 
-  const [editingBoard, setEditingBoard] = useState<Board | null>(null)
-  const [editingCaisse, setEditingCaisse] = useState<Caisse | null>(null)
-  const [editingDivers, setEditingDivers] = useState<Divers | null>(null)
-  const [editingSource, setEditingSource] = useState<Source | null>(null)
+  const appStore = useAppStore()
+  const navigate = useNavigate()
   const location = useLocation()
+
+  const [displayMode, setDisplayMode] = useState<'list' | 'grid'>('grid')
 
   const activeTab = useMemo(() => {
     const path = location.pathname.toLowerCase()
@@ -87,10 +87,22 @@ export default function HomePage() {
     <div className="min-h-svh p-4 bg-background">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">Gestion Économique Familiale</h1>
-          <p className="text-muted-foreground mt-2">
-            Gérez vos tableaux, caisses, divers et sources en un seul endroit.
-          </p>
+          <div className="flex gap-2 mt-4 ml-auto w-max"> 
+            <Button
+              variant={displayMode === 'grid' ? 'default' : 'outline'}
+              size="icon"
+              onClick={() => setDisplayMode('grid')}
+            >
+              <Grid className="size-4" />
+            </Button>
+            <Button
+              variant={displayMode === 'list' ? 'default' : 'outline'}
+              size="icon"
+              onClick={() => setDisplayMode('list')}
+            >
+              <List className="size-4" />
+            </Button>
+          </div>
         </div>
 
         <Tabs
@@ -106,252 +118,106 @@ export default function HomePage() {
           </TabsList>
 
           <TabsContent value="boards" className="space-y-4 mt-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Tableaux</h3>
-              <Button onClick={onAddBoard} size="sm">
-                <Plus className="size-4 mr-2" />
-                Ajouter un tableau
-              </Button>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {boardStore.list.map((board) => (
-                <Card key={board.id} className="flex flex-col">
-                  <CardHeader className="flex-1">
-                    <CardTitle className="text-lg">{board.title}</CardTitle>
-                    <CardDescription>
-                      Tableau de gestion économique familiale
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0 space-y-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-between"
-                      onClick={() => navigate(`/board/${board.id}`)}
-                    >
-                      Voir le tableau
-                      <ArrowRight className="size-4" />
-                    </Button>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => setEditingBoard(board)}
-                      >
-                        <Edit className="size-4 mr-2" />
-                        Modifier
-                      </Button>
-                      <AlertDialogDestructive
-                        title="Supprimer le tableau"
-                        description={`Êtes-vous sûr de vouloir supprimer "${board.title}" ?`}
-                        onConfirm={() => boardStore.remove(board.id)}
-                      >
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </AlertDialogDestructive>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <BoardsSection
+              display={displayMode}
+              boards={boardStore.list}
+              onAdd={onAddBoard}
+              onNavigateList={() => navigate("/board")}
+              onNavigate={(id) => navigate(`/board/${id}`)}
+              onEdit={(board) => appStore.openForm({
+                title: "Modifier le tableau",
+                description: "Modifiez les détails du tableau",
+                fields: [{ id: "title", name: "title", label: "Titre", type: "text" }],
+                initialData: { title: board.title },
+                onSubmit: (data) => boardStore.update(board.id, { title: data.title as string })
+              })}
+              onDelete={(board) => appStore.openDialog({
+                title: "Supprimer le tableau",
+                description: `Êtes-vous sûr de vouloir supprimer "${board.title}" ?`,
+                onConfirm: () => boardStore.remove(board.id)
+              })}
+            />
           </TabsContent>
 
           <TabsContent value="caisses" className="space-y-4 mt-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Caisses</h3>
-              <Button onClick={onAddCaisse} size="sm">
-                <Plus className="size-4 mr-2" />
-                Ajouter une caisse
-              </Button>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {caisseStore.list.map((caisse) => (
-                <Card key={caisse.id} className="flex flex-col">
-                  <CardHeader className="flex-1">
-                    <CardTitle className="text-lg">{caisse.title}</CardTitle>
-                    <CardDescription>
-                      Caisse d'épargne familiale
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => setEditingCaisse(caisse)}
-                      >
-                        <Edit className="size-4 mr-2" />
-                        Modifier
-                      </Button>
-                      <AlertDialogDestructive
-                        title="Supprimer la caisse"
-                        description={`Êtes-vous sûr de vouloir supprimer "${caisse.title}" ?`}
-                        onConfirm={() => caisseStore.remove(caisse.id)}
-                      >
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </AlertDialogDestructive>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <CaissesSection
+              display={displayMode}
+              caisses={caisseStore.list}
+              onAdd={onAddCaisse}
+              onEdit={(caisse) => appStore.openForm({
+                title: "Modifier la caisse",
+                description: "Modifiez les détails de la caisse",
+                fields: [{ id: "title", name: "title", label: "Titre", type: "text" }],
+                initialData: { title: caisse.title },
+                onSubmit: (data) => caisseStore.update(caisse.id, { title: data.title as string })
+              })}
+              onDelete={(caisse) => appStore.openDialog({
+                title: "Supprimer la caisse",
+                description: `Êtes-vous sûr de vouloir supprimer "${caisse.title}" ?`,
+                onConfirm: () => caisseStore.remove(caisse.id)
+              })}
+            />
           </TabsContent>
 
           <TabsContent value="divers" className="space-y-4 mt-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Divers</h3>
-              <Button onClick={onAddDivers} size="sm">
-                <Plus className="size-4 mr-2" />
-                Ajouter un divers
-              </Button>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {diversStore.list.map((divers) => (
-                <Card key={divers.id} className="flex flex-col">
-                  <CardHeader className="flex-1">
-                    <CardTitle className="text-lg">{divers.title}</CardTitle>
-                    <CardDescription>
-                      Élément divers de gestion économique
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => setEditingDivers(divers)}
-                      >
-                        <Edit className="size-4 mr-2" />
-                        Modifier
-                      </Button>
-                      <AlertDialogDestructive
-                        title="Supprimer le divers"
-                        description={`Êtes-vous sûr de vouloir supprimer "${divers.title}" ?`}
-                        onConfirm={() => diversStore.remove(divers.id)}
-                      >
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </AlertDialogDestructive>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <DiversSection
+              display={displayMode}
+              diversList={diversStore.list}
+              onAdd={onAddDivers}
+              onEdit={(divers) => appStore.openForm({
+                title: "Modifier le divers",
+                description: "Modifiez les détails du divers",
+                fields: [{ id: "title", name: "title", label: "Titre", type: "text" }],
+                initialData: { title: divers.title },
+                onSubmit: (data) => diversStore.update(divers.id, { title: data.title as string })
+              })}
+              onDelete={(divers) => appStore.openDialog({
+                title: "Supprimer le divers",
+                description: `Êtes-vous sûr de vouloir supprimer "${divers.title}" ?`,
+                onConfirm: () => diversStore.remove(divers.id)
+              })}
+            />
           </TabsContent>
 
           <TabsContent value="sources" className="space-y-4 mt-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Sources</h3>
-              <Button onClick={onAddSource} size="sm">
-                <Plus className="size-4 mr-2" />
-                Ajouter une source
-              </Button>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {sourceStore.list.map((source) => (
-                <Card key={source.id} className="flex flex-col">
-                  <CardHeader className="flex-1">
-                    <CardTitle className="text-lg">{source.title}</CardTitle>
-                    <CardDescription>
-                      Source de revenus familiale
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => setEditingSource(source)}
-                      >
-                        <Edit className="size-4 mr-2" />
-                        Modifier
-                      </Button>
-                      <AlertDialogDestructive
-                        title="Supprimer la source"
-                        description={`Êtes-vous sûr de vouloir supprimer "${source.title}" ?`}
-                        onConfirm={() => sourceStore.remove(source.id)}
-                      >
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </AlertDialogDestructive>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <SourcesSection
+              display={displayMode}
+              sources={sourceStore.list}
+              onAdd={onAddSource}
+              onEdit={(source) => appStore.openForm({
+                title: "Modifier la source",
+                description: "Modifiez les détails de la source",
+                fields: [{ id: "title", name: "title", label: "Titre", type: "text" }],
+                initialData: { title: source.title },
+                onSubmit: (data) => sourceStore.update(source.id, { title: data.title as string })
+              })}
+              onDelete={(source) => appStore.openDialog({
+                title: "Supprimer la source",
+                description: `Êtes-vous sûr de vouloir supprimer "${source.title}" ?`,
+                onConfirm: () => sourceStore.remove(source.id)
+              })}
+            />
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Dialogs de modification */}
-      {editingBoard && (
-        <DialogForm
-          open={!!editingBoard}
-          onOpenChange={() => setEditingBoard(null)}
-          title="Modifier le tableau"
-          description="Modifiez les détails du tableau"
-          fields={[{ id: "title", name: "title", label: "Titre", type: "text" }]}
-          initialData={editingBoard}
-          onSubmit={(data) => {
-            boardStore.update(editingBoard.id, data)
-            setEditingBoard(null)
-          }}
-        />
-      )}
+      <DialogForm
+        open={appStore.form.open}
+        title={appStore.form.title}
+        description={appStore.form.description}
+        fields={appStore.form.fields}
+        initialData={appStore.form.initialData}
+        close={() => appStore.closeForm()}
+        submit={(data) => appStore.submitForm(data)}
+      />
 
-      {editingCaisse && (
-        <DialogForm
-          open={!!editingCaisse}
-          onOpenChange={() => setEditingCaisse(null)}
-          title="Modifier la caisse"
-          description="Modifiez les détails de la caisse"
-          fields={[{ id: "title", name: "title", label: "Titre", type: "text" }]}
-          initialData={editingCaisse}
-          onSubmit={(data) => {
-            caisseStore.update(editingCaisse.id, data)
-            setEditingCaisse(null)
-          }}
-        />
-      )}
-
-      {editingDivers && (
-        <DialogForm
-          open={!!editingDivers}
-          onOpenChange={() => setEditingDivers(null)}
-          title="Modifier le divers"
-          description="Modifiez les détails du divers"
-          fields={[{ id: "title", name: "title", label: "Titre", type: "text" }]}
-          initialData={editingDivers}
-          onSubmit={(data) => {
-            diversStore.update(editingDivers.id, data)
-            setEditingDivers(null)
-          }}
-        />
-      )}
-
-      {editingSource && (
-        <DialogForm
-          open={!!editingSource}
-          onOpenChange={() => setEditingSource(null)}
-          title="Modifier la source"
-          description="Modifiez les détails de la source"
-          fields={[{ id: "title", name: "title", label: "Titre", type: "text" }]}
-          initialData={editingSource}
-          onSubmit={(data) => {
-            sourceStore.update(editingSource.id, data)
-            setEditingSource(null)
-          }}
-        />
-      )}
+      <AlertDialogDestructive
+        open={appStore.alert.open}
+        title={appStore.alert.title}
+        description={appStore.alert.description}
+        close={() => appStore.closeDialog()}
+        confirm={() => appStore.confirmDialog()}
+      />
     </div>
   )
 }

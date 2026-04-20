@@ -8,11 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Field, FieldGroup } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useRef } from "react"
 
 export interface Option {
   label: string;
@@ -27,41 +27,45 @@ export interface Field {
   type: 'text' | 'number' | 'select'
   options?: Option[] // Only for select type
   multiple?: boolean // For select type
+  max?: string // For number type
+  min?: string // For number type
 }
 
 interface DialogFormProps {
+  open: boolean
   title: string
   description?: string
   fields: Field[]
-  onSubmit: (data: Record<string, string | string[]>) => void
-  children?: React.ReactNode
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  close: () => void
+  submit: (data: Record<string, string | string[]>) => void
   initialData?: Record<string, any>
 }
 
-export function DialogForm({title, description, fields, onSubmit, children, open, onOpenChange, initialData}: DialogFormProps) {
+export function DialogForm({ open, title, description, fields, close, submit, initialData }: DialogFormProps) {
+  const formRef = useRef<HTMLFormElement>(null)
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const data: Record<string, string | string[]> = {};
-        formData.forEach((value, key) => {
-          if (data[key]) {
-            if (Array.isArray(data[key])) {
-              (data[key] as string[]).push(value.toString());
+    <Dialog open={open} onOpenChange={(newOpen) => !newOpen && close()}>
+      <DialogContent className="sm:max-w-sm">
+        <form ref={formRef} onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.currentTarget);
+          const data: Record<string, string | string[]> = {};
+          formData.forEach((value, key) => {
+            if (data[key]) {
+              if (Array.isArray(data[key])) {
+                (data[key] as string[]).push(value.toString());
+              } else {
+                data[key] = [data[key] as string, value.toString()];
+              }
             } else {
-              data[key] = [data[key] as string, value.toString()];
+              data[key] = value.toString();
             }
-          } else {
-            data[key] = value.toString();
-          }
-        });
-        onSubmit(data);
-      }}>
-        {children && <DialogTrigger>{children}</DialogTrigger>}
-        <DialogContent className="sm:max-w-sm">
+          });
+          submit(data);
+          formRef.current?.reset();
+          close();
+        }}>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
             {description && (
@@ -70,32 +74,53 @@ export function DialogForm({title, description, fields, onSubmit, children, open
               </DialogDescription>
             )}
           </DialogHeader>
-          <FieldGroup>
+          <FieldGroup className="my-4">
             {fields.map((field, index) => {
               const fieldValue = initialData?.[field.name] || field.defaultValue;
-              return field.type === 'select' ? (
-                <Field key={index}>
-                  <Label htmlFor={field.id}>{field.label}</Label>
-                  <select id={field.id} name={field.name} multiple={field.multiple} defaultValue={fieldValue}>
-                    {field.options?.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </Field>
-              ) : (
-              <Field key={field.id}>
-                <Label htmlFor={field.id}>{field.label}</Label>
-                <Input id={field.id} name={field.name} defaultValue={fieldValue} />
-              </Field>
-            )
+              switch (field.type) {
+                case 'select':
+                  return (
+                    <Field key={index}>
+                      <Label htmlFor={field.id}>{field.label}</Label>
+                      <select id={field.id} name={field.name} multiple={field.multiple} defaultValue={fieldValue}>
+                        {field.options?.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </Field>
+                  );
+                case 'number':
+                  return (
+                    <Field key={field.id}>
+                      <Label htmlFor={field.id}>{field.label}</Label>
+                      <Input
+                        id={field.id}
+                        name={field.name}
+                        type="number"
+                        defaultValue={fieldValue}
+                        placeholder="0"
+                        max={field.max}
+                        min={field.min || "0"}
+                      />
+                    </Field>
+                  );
+                case 'text':
+                default:
+                  return (
+                    <Field key={field.id}>
+                      <Label htmlFor={field.id}>{field.label}</Label>
+                      <Input id={field.id} name={field.name} defaultValue={fieldValue} />
+                    </Field>
+                  );
+              }
             })}
           </FieldGroup>
           <DialogFooter>
-            <DialogClose><Button variant="outline">Cancel</Button></DialogClose>
+            <DialogClose><span className="cursor-pointer rounded-lg border border-border bg-background px-3 py-2 text-sm transition hover:bg-muted">Cancel</span></DialogClose>
             <Button type="submit">Save changes</Button>
           </DialogFooter>
-        </DialogContent>
-      </form>
+        </form>
+      </DialogContent>
     </Dialog>
   )
 }

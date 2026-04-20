@@ -8,14 +8,25 @@ import { useNavigate, useParams } from "react-router-dom"
 import { BudgetSection, DepenseSection, EpargneSection } from "@/components/sections"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import TextEditable from "@/components/TextEditable"
+import { useDiversStore } from "@/store/divers"
+import { useCaisseStore } from "@/store/caisse"
+import { useAppStore } from "@/store/app.store"
+import { DialogForm } from "@/components/DialogForm"
 
 export default function BoardDetailPage() {
   const planningStore = usePlanningStore()
   const sourceStore = useSourceStore()
+  const diversStore = useDiversStore()
+  const caisseStore = useCaisseStore()
+  const appStore = useAppStore()
   const navigate = useNavigate()
   const { boardId, planningId } = useParams<{ boardId?: string; planningId?: string }>()
 
   const plannings = planningStore.getList(boardId ?? undefined)
+  const currentPlanning = planningId ? planningStore.getOne({ id: planningId }) : undefined
+  const currentBudgetTotal = currentPlanning?.budgets.reduce((total, b) => total + b.amount, 0) ?? 0
+  const currentDepenseTotal = currentPlanning?.depenses.reduce((total, d) => total + d.amount, 0) ?? 0
+  const currentEpargneMax = currentBudgetTotal - currentDepenseTotal
 
   useEffect(() => {
     if (boardId && plannings.length === 0) {
@@ -81,7 +92,11 @@ export default function BoardDetailPage() {
                   <Button
                     variant="destructive"
                     size="icon"
-                    onClick={() => planningStore.remove(planningId)}
+                    onClick={() => appStore.openDialog({
+                      title: "Supprimer le planning",
+                      description: `Êtes-vous sûr de vouloir supprimer "${planningStore.getOne({ id: planningId })?.title}" ?`,
+                      onConfirm: () => planningStore.remove(planningId),
+                    })}
                   >
                     <Trash className="size-4" />
                   </Button>
@@ -91,23 +106,64 @@ export default function BoardDetailPage() {
               <CardDescription className="px-4">
                 <div className="mt-4 grid gap-4 xl:grid-cols-3">
                   <BudgetSection 
-                    sources={sourceStore.getList()}
                     budgets={planningStore.getOne({ id: planningId })?.budgets || []} 
-                    addBudget={(data: Partial<Budget>) => planningStore.addBudget(planningId, data)}
+                    sources={sourceStore.getList()}
+                    addBudget={() => appStore.openForm({
+                      title: "Ajouter un budget",
+                      description: "Entrez les détails du nouveau budget",
+                      fields: [
+                        { id: "amount", name: "amount", label: "Montant", type: "number" },
+                        { id: "sourceId", name: "sourceId", label: "Source", type: "select", options: sourceStore.getList().map(s => ({ label: s.title, value: s.id })) }
+                      ],
+                      onSubmit: (formData) => planningStore.addBudget(planningId, { 
+                        amount: parseFloat(formData.amount as string),
+                        sourceId: formData.sourceId as string,
+                      })
+                    })}
                     updateBudget={(id: string, data: Partial<Budget>) => planningStore.updateBudget(planningId, id, data)}
-                    deleteBudget={(id: string) => planningStore.removeBudget(planningId, id)}
+                    deleteBudget={(id: string) => appStore.openDialog({
+                      title: "Supprimer le budget",
+                      description: `Êtes-vous sûr de vouloir supprimer ce budget ?`,
+                      onConfirm: () => planningStore.removeBudget(planningId, id)
+                    })}
                   />
                   <DepenseSection 
+                    divers={diversStore.getList()}
                     depenses={planningStore.getOne({ id: planningId })?.depenses || []} 
-                    addDepense={(data: Partial<Depense>) => planningStore.addDepense(planningId, data)}
+                    addDepense={() => appStore.openForm({
+                      title: "Ajouter une dépense",
+                      description: "Entrez les détails de la nouvelle dépense",
+                      fields: [
+                        { id: "amount", name: "amount", label: "Montant", type: "number", max: currentBudgetTotal.toString() },
+                        { id: "diversId", name: "diversId", label: "Divers", type: "select", options: diversStore.getList().map(d => ({ label: d.title, value: d.id })) }
+                      ],
+                      onSubmit: (formData) => planningStore.addDepense(planningId, { amount: parseFloat(formData.amount as string), diversId: formData.diversId as string })
+                    })}
                     updateDepense={(id: string, data: Partial<Depense>) => planningStore.updateDepense(planningId, id, data)}
-                    deleteDepense={(id: string) => planningStore.removeDepense(planningId, id)}
+                    deleteDepense={(id: string) => appStore.openDialog({
+                      title: "Supprimer la dépense",
+                      description: `Êtes-vous sûr de vouloir supprimer cette dépense ?`,
+                      onConfirm: () => planningStore.removeDepense(planningId, id)
+                    })}
                   />
                   <EpargneSection 
-                    epargnes={planningStore.getOne({ id: planningId })?.epargnes || []} 
-                    addEpargne={(data: Partial<Epargne>) => planningStore.addEpargne(planningId, data)}
+                    caisses={caisseStore.getList()}
+                    epargnes={planningStore.getOne({ id: planningId })?.epargnes || []}
+                    addEpargne={() => appStore.openForm({
+                        title: "Ajouter une épargne",
+                        description: "Entrez les détails de la nouvelle épargne",
+                        fields: [
+                          { id: "amount", name: "amount", label: "Montant", type: "number", max: currentEpargneMax.toString() },
+                          { id: "caisseId", name: "caisseId", label: "Caisse", type: "select", options: caisseStore.getList().map(c => ({ label: c.title, value: c.id })) }
+                        ],
+                        onSubmit: (formData) => planningStore.addEpargne(planningId, { amount: parseFloat(formData.amount as string), caisseId: formData.caisseId as string })
+                      })}
                     updateEpargne={(id: string, data: Partial<Epargne>) => planningStore.updateEpargne(planningId, id, data)}
-                    deleteEpargne={(id: string) => planningStore.removeEpargne(planningId, id)}
+                    deleteEpargne={(id: string) => appStore.openDialog({
+                      title: "Supprimer l'épargne",
+                      description: `Êtes-vous sûr de vouloir supprimer cette épargne ?`,
+                      onConfirm: () => planningStore.removeEpargne(planningId, id)
+                    })}
                   />
                 </div>
               </CardDescription>
@@ -122,6 +178,19 @@ export default function BoardDetailPage() {
           </TabsContent>
         </Tabs>
       )}
+      <DialogForm
+        open={appStore.form.open}
+        title={appStore.form.title}
+        description={appStore.form.description}
+        fields={appStore.form.fields}
+        close={() => appStore.closeForm()}
+        submit={(data) => {
+          if (appStore.form.onSubmit) {
+            appStore.form.onSubmit(data)
+          }
+          appStore.closeForm()
+        }}
+      />
     </>
   )
 }

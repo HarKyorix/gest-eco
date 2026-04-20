@@ -26,7 +26,20 @@ export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
         <Item key={index} variant="outline" className="flex items-start border-1 rounded-xl border-muted">
           <ItemContent className="gap-1">
             <ItemTitle className="w-full flex items-center justify-between">
-              <span>{item.title}</span>
+              {item.commentaire ? 
+                item.onUpdate ? (
+                  <TextEditable
+                    value={item.commentaire}
+                    onSave={(value) => item.onUpdate!({ commentaire: value })}
+                  >
+                    {item.commentaire}
+                  </TextEditable>
+                ) 
+                :
+                (<span>{item.commentaire}</span>)
+                :
+                <span>{item.title}</span>
+              }
               {item.onUpdate ? (
                 <TextEditable
                   value={item.amount?.toString() || "0"}
@@ -40,20 +53,22 @@ export function ItemGroupContainer({ list }: { list: ItemWithActions[] }) {
                 <span>{item.amount}F</span>
               )}
             </ItemTitle>
-            {item.commentaire && (
-              <ItemDescription className="text-xs">
-                {item.onUpdate ? (
+            <ItemDescription className="text-xs">
+              {item.commentaire ? 
+                (<span>{item.title}</span>)
+                :
+                item.onUpdate ? (
                   <TextEditable
                     value={item.commentaire}
                     onSave={(value) => item.onUpdate!({ commentaire: value })}
                   >
                     {item.commentaire}
                   </TextEditable>
-                ) : (
-                  item.commentaire
-                )}
-              </ItemDescription>
-            )}
+                ) 
+                :
+                (<span>{item.commentaire}</span>)
+              }
+            </ItemDescription>
           </ItemContent>
           <ItemActions>
             {item.onDelete && (

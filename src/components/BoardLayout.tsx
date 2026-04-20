@@ -3,10 +3,14 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { useBoardStore, type Board } from "@/store/board"
 import { Outlet, useNavigate, useParams } from "react-router-dom"
 import { useMemo } from "react"
+import { AlertDialogDestructive } from "./AlertDialogDestructive"
+import { useAppStore } from "@/store/app.store"
 
 
 export default function BoardLayout() {
   const boardStore = useBoardStore()
+  const appStore = useAppStore()
+  
   const navigate = useNavigate()
   const { boardId } = useParams<{ boardId?: string }>()
 
@@ -30,7 +34,11 @@ export default function BoardLayout() {
   }
 
   const handleRemoveBoard = (id: string) => {
-    boardStore.remove(id)
+    appStore.openDialog({
+      title: "Supprimer la tableau",
+      description: `Êtes-vous sûr de vouloir supprimer "${boardStore.getOne(id)?.title}" ?`,
+      onConfirm: () => boardStore.remove(id)
+    })
   }
 
   const handleUpdateBoard = (data: Partial<Board>) => {
@@ -59,6 +67,14 @@ export default function BoardLayout() {
           <Outlet />
         </SidebarInset>
       </div>
+
+      <AlertDialogDestructive
+        open={appStore.alert.open}
+        title={appStore.alert.title}
+        description={appStore.alert.description}
+        close={() => appStore.closeDialog()}
+        confirm={() => appStore.confirmDialog()}
+      />
     </SidebarProvider>
   )
 }

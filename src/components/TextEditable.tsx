@@ -67,13 +67,13 @@ export default function TextEditable({
         placeholder={placeholder}
       />
       : 
-        <div onClick={() => setEditing(true)}>
+        <span onClick={() => setEditing(true)} className={cn("block cursor-pointer", className)}>
           {value ?
           (children || <span>{value}</span>)
           : (
             <span className="text-xs text-muted-foreground">{placeholder}</span>
           )}
-        </div>
+        </span>
       }
     </>
   )
