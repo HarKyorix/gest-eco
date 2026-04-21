@@ -20,10 +20,10 @@ export function BudgetAlert({
 
   if (budgetTotal === 0) {
     return (
-      <Alert className="flex justify-center border-amber-200 bg-amber-50">
-        <AlertCircle className="size-4 text-amber-600" />
-        <AlertTitle className="text-amber-900">Aucun budget défini</AlertTitle>
-        <AlertDescription className="text-amber-800">
+      <Alert className="flex justify-center border-red-200 bg-red-100">
+        <AlertCircle className="size-4 text-red-600" />
+        <AlertTitle className="text-red-900">Aucun budget défini</AlertTitle>
+        <AlertDescription className="text-red-800">
           Commencez par ajouter un budget pour cette période
         </AlertDescription>
       </Alert>
