@@ -1,5 +1,4 @@
 // src/store/db/divers.ts
-import { fields } from "@/helper/formField";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -9,17 +8,6 @@ export interface Divers {
   position?: number;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export const diversAddForm = {
-  title: 'Add Divers',
-  description: 'Add a new divers to your family economy management',
-  fields: [ fields.title ],
-}
-export const diversEditForm = {
-  title: 'Edit Divers',
-  description: 'Edit the divers details',
-  fields: [ fields.title ],
 }
 
 export interface DiversState {

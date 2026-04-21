@@ -1,5 +1,4 @@
 // src/store/db/caisse.ts
-import { fields } from "@/helper/formField";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -9,17 +8,6 @@ export interface Caisse {
   position?: number;
   createdAt: Date;
   updatedAt: Date;
-}
-
-export const caisseAddForm = {
-  title: 'Add Caisse',
-  description: 'Add a new caisse to your family economy management',
-  fields: [ fields.title ],
-}
-export const caisseEditForm = {
-  title: 'Edit Caisse',
-  description: 'Edit the caisse details',
-  fields: [ fields.title ],
 }
 
 export interface CaisseState {

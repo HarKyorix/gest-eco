@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
+import { Pencil } from "lucide-react"
 
 interface TextEditableProps {
   value?: string
@@ -19,6 +20,7 @@ export default function TextEditable({
   placeholder = "Cliquez pour modifier",
   children
 }: TextEditableProps) {
+  const [editable, setEditable] = useState(false)
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(value || "")
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -67,12 +69,20 @@ export default function TextEditable({
         placeholder={placeholder}
       />
       : 
-        <span onClick={() => setEditing(true)} className={cn("block cursor-pointer", className)}>
+        <span 
+          onClick={() => setEditing(true)} 
+          className={ 'flex items-center ' +
+            cn("block cursor-pointer", className)
+          }
+          onMouseEnter={() => setEditable(true)}
+          onMouseLeave={() => setEditable(false)}
+        >
           {value ?
           (children || <span>{value}</span>)
           : (
             <span className="text-xs text-muted-foreground">{placeholder}</span>
           )}
+          <Pencil className={cn("size-3 ml-1 text-muted-foreground transition-opacity", editable ? "opacity-100" : "opacity-0")} />
         </span>
       }
     </>
