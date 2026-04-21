@@ -1,9 +1,11 @@
-import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card"
+import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import { ItemGroupContainer } from "@/components/ItemGroupContainer"
 import { Button } from "@/components/ui/button"
 import { type Depense } from "@/store/db/planning"
 import type { Divers } from "@/store/db/divers"
+import { SearchAndSort } from "@/components/SearchAndSort"
+import { useSearchAndSort } from "@/hooks/useSearchAndSort"
 
 interface DepenseSectionProps {
   currency?: string;
@@ -16,20 +18,42 @@ interface DepenseSectionProps {
 }
 
 export function DepenseSection({ currentDepenseTotal, currency, divers, depenses, addDepense, updateDepense, deleteDepense }: DepenseSectionProps) {
+  const { filteredAndSorted, searchValue, setSearchValue, sortBy, setSortBy, sortOrder, setSortOrder } = useSearchAndSort(
+    depenses.map((depense) => ({
+      ...depense,
+      title: divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
+    }))
+  )
   
   return (
     <Card className="flex flex-col gap-4 p-4">
-      <CardTitle className="flex items-center justify-between gap-2">
-        <span className="font-medium">Dépenses</span>
-        <Button variant="outline" size="icon" onClick={addDepense}>
-          <Plus className="size-4" />
-          <span className="sr-only">Ajouter une dépense</span>
-        </Button>
-      </CardTitle>
-      <CardContent className="text-sm text-muted-foreground">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between gap-2">
+          <span className="font-medium">Dépenses</span>
+        </CardTitle>
+        <CardAction>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={addDepense}
+          >
+            <Plus className="size-4" />
+            <span className="sr-only">Ajouter une dépense</span>
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="text-sm text-muted-foreground space-y-4">
+        <SearchAndSort
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+          sortOrder={sortOrder}
+          onSortOrderChange={setSortOrder}
+        />
         <ItemGroupContainer
           currency={currency}
-          list={depenses.map((depense) => ({
+          list={filteredAndSorted.map((depense) => ({
             title: divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
             amount: depense.amount,
             commentaire: depense.commentaire,

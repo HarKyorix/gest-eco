@@ -29,7 +29,7 @@ export function ExportImportButtons({
     <div className="flex gap-2">
       <Button
         variant="outline"
-        size="sm"
+        size="default"
         onClick={onExport}
         disabled={disabled}
         className="gap-2"
@@ -39,7 +39,7 @@ export function ExportImportButtons({
       </Button>
       <Button
         variant="outline"
-        size="sm"
+        size="default"
         onClick={handleImportClick}
         disabled={disabled}
         className="gap-2"

@@ -6,6 +6,7 @@ import BoardLayout from "./components/BoardLayout"
 import { AlertDialogDestructive } from "@/components/AlertDialogDestructive"
 import { DialogForm } from "@/components/DialogForm"
 import { useAppStore } from "./store/app.store"
+import { ToastContainer } from "@/components/Toast"
 
 function App() {
   const appStore = useAppStore()
@@ -46,6 +47,8 @@ function App() {
         close={() => appStore.closeDialog()}
         confirm={() => appStore.confirmDialog()}
       />
+
+      <ToastContainer />
     </>
   )
 }

@@ -35,7 +35,7 @@ export default function BoardPage() {
           <Button variant="outline" onClick={() => navigate("/")} size="icon">
             <ArrowLeft className="size-4" />
           </Button>
-          <div className="flex gap-2 mt-4 ml-auto w-max"> 
+          <div className="flex gap-2 ml-auto w-max"> 
             <Button
               variant={settingStore.displayMode === 'grid' ? 'default' : 'outline'}
               size="icon"
