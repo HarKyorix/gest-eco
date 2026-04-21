@@ -7,9 +7,25 @@ import { AlertDialogDestructive } from "@/components/AlertDialogDestructive"
 import { DialogForm } from "@/components/DialogForm"
 import { useAppStore } from "./store/app.store"
 import { ToastContainer } from "@/components/Toast"
+import { useSettingStore } from "./store/setting.store"
+import { useEffect } from "react"
 
 function App() {
   const appStore = useAppStore()
+  const settingStore = useSettingStore()
+
+  // Apply dark mode class to document
+  useEffect(() => {
+    const root = document.documentElement
+    const isDark = settingStore.theme === 'dark' || 
+                   (settingStore.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    
+    if (isDark) {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+  }, [settingStore.theme])
   
   return (
     <>

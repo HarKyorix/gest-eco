@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -38,7 +37,7 @@ interface DialogFormProps {
   fields: Field[]
   close: () => void
   submit: (data: Record<string, string | string[]>) => void
-  initialData?: Record<string, any>
+  initialData?: Record<string, string | string[]>
 }
 
 export function DialogForm({ open, title, description, fields, close, submit, initialData }: DialogFormProps) {

@@ -15,7 +15,7 @@ export interface AppState {
     title: string;
     description?: string;
     fields: Field[];
-    initialData?: Record<string, unknown>;
+    initialData?: Record<string, string | string[]>;
     onSubmit: (data: Record<string, string | string[]>) => void;
   };
 
@@ -23,7 +23,7 @@ export interface AppState {
   closeDialog: () => void;
   confirmDialog: () => void;
 
-  openForm: (params: { title: string; description?: string; fields: Field[]; initialData?: Record<string, unknown>; onSubmit: (data: Record<string, string | string[]>) => void }) => void;
+  openForm: (params: { title: string; description?: string; fields: Field[]; initialData?: Record<string, string | string[]>; onSubmit: (data: Record<string, string | string[]>) => void }) => void;
   closeForm: () => void;
   submitForm: (data: Record<string, string | string[]>) => void;
 

@@ -20,7 +20,7 @@ export function BudgetAlert({
 
   if (budgetTotal === 0) {
     return (
-      <Alert className="border-amber-200 bg-amber-50">
+      <Alert className="flex justify-center border-amber-200 bg-amber-50">
         <AlertCircle className="size-4 text-amber-600" />
         <AlertTitle className="text-amber-900">Aucun budget défini</AlertTitle>
         <AlertDescription className="text-amber-800">
@@ -32,7 +32,7 @@ export function BudgetAlert({
 
   if (remaining < 0) {
     return (
-      <Alert className="border-red-200 bg-red-50">
+      <Alert className="flex justify-center border-red-200 bg-red-50">
         <AlertCircle className="size-4 text-red-600" />
         <AlertTitle className="text-red-900">Dépassement budgétaire</AlertTitle>
         <AlertDescription className="text-red-800">
@@ -48,7 +48,7 @@ export function BudgetAlert({
 
   if (remaining === 0) {
     return (
-      <Alert className="border-green-200 bg-green-50">
+      <Alert className="flex justify-center border-green-200 bg-green-50">
         <CheckCircle2 className="size-4 text-green-600" />
         <AlertTitle className="text-green-900">Budget exact</AlertTitle>
         <AlertDescription className="text-green-800">
@@ -60,7 +60,7 @@ export function BudgetAlert({
 
   if (remaining <= budgetTotal * 0.1) {
     return (
-      <Alert className="border-orange-200 bg-orange-50">
+      <Alert className="flex justify-center border-orange-200 bg-orange-50">
         <AlertTriangle className="size-4 text-orange-600" />
         <AlertTitle className="text-orange-900">Budget faible</AlertTitle>
         <AlertDescription className="text-orange-800">
@@ -75,7 +75,7 @@ export function BudgetAlert({
   }
 
   return (
-    <Alert className="border-blue-200 bg-blue-50">
+    <Alert className="flex justify-center border-blue-200 bg-blue-50">
       <CheckCircle2 className="size-4 text-blue-600" />
       <AlertTitle className="text-blue-900">Budget sain</AlertTitle>
       <AlertDescription className="text-blue-800">

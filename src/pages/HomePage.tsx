@@ -10,6 +10,7 @@ import { BoardsSection, CaissesSection, DiversSection, SourcesSection } from "@/
 import { Grid, List, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useSettingStore } from "@/store/setting.store"
+import { useToast } from "@/store/toast.store"
 
 export default function HomePage() {
   const boardStore = useBoardStore()
@@ -19,6 +20,7 @@ export default function HomePage() {
 
   const appStore = useAppStore()
   const settingStore = useSettingStore()
+  const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -87,7 +89,7 @@ export default function HomePage() {
       <div className="mx-auto max-w-7xl">
         <div className="mb-6">
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={() => settingStore.setPreferances('theme', settingStore.theme === 'light' ? 'dark' : 'light')}
           >
@@ -147,7 +149,10 @@ export default function HomePage() {
               onDelete={(board) => appStore.openDialog({
                 title: "Supprimer le tableau",
                 description: `Êtes-vous sûr de vouloir supprimer "${board.title}" ?`,
-                onConfirm: () => boardStore.remove(board.id)
+                onConfirm: () => {
+                  boardStore.remove(board.id)
+                  toast.success("Tableau supprimé", `Le tableau "${board.title}" a été supprimé`)
+                }
               })}
             />
           </TabsContent>
@@ -167,7 +172,10 @@ export default function HomePage() {
               onDelete={(caisse) => appStore.openDialog({
                 title: "Supprimer la caisse",
                 description: `Êtes-vous sûr de vouloir supprimer "${caisse.title}" ?`,
-                onConfirm: () => caisseStore.remove(caisse.id)
+                onConfirm: () => {
+                  caisseStore.remove(caisse.id)
+                  toast.success("Caisse supprimée", `La caisse "${caisse.title}" a été supprimée`)
+                }
               })}
             />
           </TabsContent>
@@ -187,7 +195,10 @@ export default function HomePage() {
               onDelete={(divers) => appStore.openDialog({
                 title: "Supprimer le divers",
                 description: `Êtes-vous sûr de vouloir supprimer "${divers.title}" ?`,
-                onConfirm: () => diversStore.remove(divers.id)
+                onConfirm: () => {
+                  diversStore.remove(divers.id)
+                  toast.success("Divers supprimé", `Le divers "${divers.title}" a été supprimé`)
+                }
               })}
             />
           </TabsContent>
@@ -207,7 +218,10 @@ export default function HomePage() {
               onDelete={(source) => appStore.openDialog({
                 title: "Supprimer la source",
                 description: `Êtes-vous sûr de vouloir supprimer "${source.title}" ?`,
-                onConfirm: () => sourceStore.remove(source.id)
+                onConfirm: () => {
+                  sourceStore.remove(source.id)
+                  toast.success("Source supprimée", `La source "${source.title}" a été supprimée`)
+                }
               })}
             />
           </TabsContent>
