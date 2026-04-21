@@ -7,7 +7,7 @@ import { useEffect, useMemo } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppStore } from "@/store/app.store"
 import { BoardsSection, CaissesSection, DiversSection, SourcesSection } from "@/components/sections"
-import { Grid, List } from "lucide-react"
+import { Grid, List, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useSettingStore } from "@/store/setting.store"
 
@@ -86,6 +86,20 @@ export default function HomePage() {
     <div className="min-h-svh p-4 bg-background">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => settingStore.setPreferances('theme', settingStore.theme === 'light' ? 'dark' : 'light')}
+          >
+            { settingStore.theme === 'light' ? 
+              <Sun className="size-4 mr-2" />
+              : 
+              <Moon className="size-4 mr-2" />
+            }
+            Mode {settingStore.theme === 'light' ? 'clair' : settingStore.theme === 'dark' ? 'sombre' : 'système'}
+          </Button>
+          <h1 className="text-2xl font-bold">Bienvenue sur votre gestionnaire économique familial</h1>
+          <p className="text-muted-foreground">Organisez vos finances, suivez vos dépenses et atteignez vos objectifs financiers en famille.</p>
           <div className="flex gap-2 mt-4 ml-auto w-max"> 
             <Button
               variant={settingStore.displayMode === 'grid' ? 'default' : 'outline'}

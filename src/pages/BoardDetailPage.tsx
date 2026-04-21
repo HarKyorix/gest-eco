@@ -19,6 +19,7 @@ import { useDataExportImport } from "@/lib/exportImport"
 import { ExportImportButtons } from "@/components/ExportImportButtons"
 import { useToast } from "@/store/toast.store"
 import { useHistory } from "@/hooks/useHistory"
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 
 export default function BoardDetailPage() {
   const { boardId, planningId } = useParams<{ boardId?: string; planningId?: string }>()
@@ -36,6 +37,13 @@ export default function BoardDetailPage() {
   const { exportData, importData } = useDataExportImport()
   const { undo, redo, canUndo, canRedo, saveSnapshot } = useHistory()
   const [isImporting, setIsImporting] = useState(false)
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onUndo: () => planningId && canUndo && undo(planningId),
+    onRedo: () => planningId && canRedo && redo(planningId),
+    onEscape: () => appStore.closeForm(),
+  })
 
   const currentBoard = useMemo(() => boardId ? boardStore.getOne(boardId) : null, [boardId, boardStore])
   const plannings = useMemo(() => planningStore.getList(boardId), [boardId, planningStore])
@@ -256,7 +264,11 @@ export default function BoardDetailPage() {
                       onClick={() => appStore.openDialog({
                         title: "Supprimer le planning",
                         description: `Êtes-vous sûr de vouloir supprimer "${currentPlanning?.title}" ?`,
-                        onConfirm: () => planningStore.remove(planningId),
+                        onConfirm: () => {
+                          planningStore.remove(planningId)
+                          toast.success("Planning supprimé", `Le planning "${currentPlanning?.title}" a été supprimé`)
+                          navigate(`/board/${boardId}`)
+                        },
                       })}
                     >
                       <Trash className="size-4" />
@@ -299,6 +311,7 @@ export default function BoardDetailPage() {
                         planningStore.removeBudget(planningId, id)
                         const updated = planningStore.getOne({ id: planningId })
                         if (updated) saveSnapshot(updated, "Budget supprimé")
+                        toast.success("Budget supprimé", "Le budget a été supprimé avec succès")
                       }
                     })}
                   />
@@ -335,6 +348,7 @@ export default function BoardDetailPage() {
                         planningStore.removeDepense(planningId, id)
                         const updated = planningStore.getOne({ id: planningId })
                         if (updated) saveSnapshot(updated, "Dépense supprimée")
+                        toast.success("Dépense supprimée", "La dépense a été supprimée avec succès")
                       }
                     })}
                   />
@@ -371,6 +385,7 @@ export default function BoardDetailPage() {
                         planningStore.removeEpargne(planningId, id)
                         const updated = planningStore.getOne({ id: planningId })
                         if (updated) saveSnapshot(updated, "Épargne supprimée")
+                        toast.success("Épargne supprimée", "L'épargne a été supprimée avec succès")
                       }
                     })}
                   />

@@ -111,7 +111,9 @@ src/
 │
 ├── hooks/
 │   ├── useSearchAndSort.ts       # Filtrage/tri réutilisable
-│   └── useHistory.ts             # Undo/Redo logic
+│   ├── useHistory.ts             # Undo/Redo logic
+│   ├── useKeyboardShortcuts.ts   # Raccourcis clavier (Ctrl+Z/Y, Escape)
+│   └── use-mobile.ts             # Détection responsive
 │
 ├── lib/
 │   ├── exportImport.ts           # Export/Import JSON
@@ -196,6 +198,34 @@ Les données exportées incluent:
 - Toutes les caisses, sources, catégories
 - Les préférences utilisateur
 
+### ⌨️ Raccourcis Clavier (Nouveau)
+- **Ctrl+Z** / **Cmd+Z** - Annuler (Undo)
+- **Ctrl+Y** / **Cmd+Shift+Z** - Rétablir (Redo)
+- **Escape** - Fermer les formulaires
+
+Les raccourcis s'ignorent intelligemment quand vous tapez dans les champs de texte.
+
+### ✅ Validation des Montants (Nouveau)
+Les champs montants acceptent uniquement des valeurs **> 0**:
+- Les montants zéro ou négatifs sont rejetés
+- Message d'erreur clair: "Montant doit être supérieur à 0"
+- Validation HTML5 (min="0", step="0.01")
+
+### 📢 Confirmations de Suppression (Nouveau)
+Après suppression, les toasts confirment:
+- ✅ "Budget supprimé"
+- ✅ "Dépense supprimée"
+- ✅ "Épargne supprimée"
+- ✅ "Planning supprimé"
+
+### 🌙 Mode Sombre Amélioré (Nouveau)
+Contrastes et visibilité optimisés:
+- Backgrounds plus clairs en mode sombre
+- Texte plus contrasté pour meilleure lisibilité
+- Borders plus visibles
+- Couleurs des inputs plus distinctes
+- Support complet des composants Toast, BudgetAlert, SearchAndSort
+
 ## 📝 Notes Développement
 
 - **React Compiler** est activé pour optimiser les performances
@@ -203,10 +233,12 @@ Les données exportées incluent:
 - **Toast System** - Notifications non-intrusive avec auto-fermeture
 - **History Store** - Undo/Redo avec gestion d'état immuable
 - **SearchAndSort Hook** - Générique et réutilisable pour filtrer/trier
-- Tous les formulaires utilisent le composant générique `DialogForm`
+- **Keyboard Shortcuts** - Utilise `useKeyboardShortcuts` hook pour l'accessibilité
+- Tous les formulaires utilisent le composant générique `DialogForm` avec validation
 - Mobile-first design avec Tailwind CSS
 - Type-safe avec TypeScript strict
 - Snapshots capturés manuellement après chaque action (évite boucles infinies)
+- Dark mode avec variables CSS robustes et bien contrastées
 
 ## 📄 Licence
 

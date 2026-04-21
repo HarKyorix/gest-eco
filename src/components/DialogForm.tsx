@@ -50,6 +50,18 @@ export function DialogForm({ open, title, description, fields, close, submit, in
         <form ref={formRef} onSubmit={(e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
+          
+          // Validate positive amounts for number fields
+          const numberFields = fields.filter(f => f.type === 'number');
+          for (const field of numberFields) {
+            const value = formData.get(field.name);
+            const numValue = value ? parseFloat(value.toString()) : 0;
+            if (numValue <= 0) {
+              alert(`${field.label} doit être supérieur à 0`);
+              return;
+            }
+          }
+          
           const data: Record<string, string | string[]> = {};
           formData.forEach((value, key) => {
             if (data[key]) {
