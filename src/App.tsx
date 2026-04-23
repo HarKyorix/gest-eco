@@ -1,7 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import HomePage from "./pages/HomePage"
-import BoardDetailPage from "./pages/BoardDetailPage"
-import BoardPage from "./pages/BoardPage"
 import BoardLayout from "./components/BoardLayout"
 import { AlertDialogDestructive } from "@/components/AlertDialogDestructive"
 import { DialogForm } from "@/components/DialogForm"
@@ -9,6 +7,10 @@ import { useAppStore } from "./store/app.store"
 import { ToastContainer } from "@/components/Toast"
 import { useSettingStore } from "./store/setting.store"
 import { useEffect } from "react"
+import BoardPage from "./pages/BoardPage"
+import CaissePage from "./pages/CaissePage"
+import DiversPage from "./pages/DiversPage"
+import SourcePage from "./pages/SourcePage"
 
 function App() {
   const appStore = useAppStore()
@@ -30,18 +32,14 @@ function App() {
   return (
     <>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage />}/>
-          <Route path="caisse" element={<HomePage />} />
-          <Route path="divers" element={<HomePage />} />
-          <Route path="source" element={<HomePage />} />
-          
-          <Route path="board" element={<BoardPage />}/>
-          <Route path="board/:boardId/" element={<BoardLayout />}>
-            <Route index element={<BoardDetailPage />}/>
-            <Route path=":planningId" element={<BoardDetailPage />}/>
+        <Routes>          
+          <Route path="/" element={<BoardLayout />}>
+            <Route index element={<HomePage />}/>
+            <Route path="caisse" element={<CaissePage />} />
+            <Route path="divers" element={<DiversPage />} />
+            <Route path="source" element={<SourcePage />} />
+            <Route path="board" element={<BoardPage />}/>
           </Route>
-
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

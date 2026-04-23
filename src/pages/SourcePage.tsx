@@ -1,22 +1,21 @@
-
-import { useBoardStore } from "@/store/db/board"
+import { useSourceStore } from "@/store/db/source"
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Grid, List } from "lucide-react"
-import { BoardsSection } from "@/components/sections/BoardsSection"
+import { SourcesSection } from "@/components/sections/SourcesSection"
 import { useAppStore } from "@/store/app.store"
 import { useSettingStore } from "@/store/setting.store"
 import { useToast } from "@/store/toast.store"
-import { useDataExportImport } from "@/lib/exportImport"
+import { Card, CardContent } from "@/components/ui/card"
 import { ExportImportButtons } from "@/components/ExportImportButtons"
+import { useDataExportImport } from "@/lib/exportImport"
 
-export default function BoardPage() {
-  const boardStore = useBoardStore()
-  const toast = useToast()
+export default function SourcePage() {
+  const sourceStore = useSourceStore()
   const appStore = useAppStore()
   const settingStore = useSettingStore()
+  const toast = useToast()
   const navigate = useNavigate()
   const { exportData, importData } = useDataExportImport()
   const [isImporting, setIsImporting] = useState(false)
@@ -25,10 +24,10 @@ export default function BoardPage() {
     try {
       exportData(
         {
-          boards: boardStore.getList(),
+          sources: sourceStore.getList(),
         },
         settingStore,
-        "boards"
+        "sources"
       )
       toast.success("Export réussi", "Vos données ont été téléchargées")
     } catch (error) {
@@ -36,17 +35,17 @@ export default function BoardPage() {
       toast.error("Erreur d'export", "Impossible d'exporter les données")
     }
   }
-
+  
   const handleImport = async (file: File) => {
     try {
       setIsImporting(true)
       const data = await importData(file)
       
       // Effacer les données existantes
-      boardStore.clear()
+      sourceStore.clear()
 
       // Importer les nouvelles données
-      data.boards.forEach((board) => boardStore.add(board))
+      data.sources.forEach((source) => sourceStore.add(source))
 
       toast.success("Import réussi", "Vos données ont été importées avec succès")
       
@@ -64,16 +63,16 @@ export default function BoardPage() {
     }
   }
 
-  const onAddBoard = () => {
-    const newBoard = {
-      title: "Nouveau tableau"+boardStore.list.length,
+  const onAddSource = () => {
+    const newSource = {
+      title: "Nouvelle source " + (sourceStore.list.length + 1),
     }
-    boardStore.add(newBoard)
+    sourceStore.add(newSource)
   }
 
   useEffect(() => {
-    boardStore.init()
-  }, [boardStore])
+    sourceStore.init()
+  }, [sourceStore])
 
   return (
     <div className="min-h-svh w-full p-4">
@@ -106,22 +105,24 @@ export default function BoardPage() {
         </div>
         <Card className="w-full h-full">
           <CardContent>
-            <BoardsSection
+            <SourcesSection
               display={settingStore.displayMode}
-              boards={boardStore.list}
-              onAdd={onAddBoard}
-              onNavigate={(id) => navigate(`/board/${id}`)}
-              onEdit={(board) => appStore.openForm({
-                title: "Modifier le tableau",
-                description: "Modifiez les détails du tableau",
+              sources={sourceStore.list}
+              onAdd={onAddSource}
+              onEdit={(source) => appStore.openForm({
+                title: "Modifier la source",
+                description: "Modifiez les détails de la source",
                 fields: [{ id: "title", name: "title", label: "Titre", type: "text" }],
-                initialData: { title: board.title },
-                onSubmit: (data) => boardStore.update(board.id, { title: data.title as string })
+                initialData: { title: source.title },
+                onSubmit: (data) => sourceStore.update(source.id, { title: data.title as string })
               })}
-              onDelete={(board) => appStore.openDialog({
-                title: "Supprimer le tableau",
-                description: `Êtes-vous sûr de vouloir supprimer "${board.title}" ?`,
-                onConfirm: () => boardStore.remove(board.id)
+              onDelete={(source) => appStore.openDialog({
+                title: "Supprimer la source",
+                description: `Êtes-vous sûr de vouloir supprimer "${source.title}" ?`,
+                onConfirm: () => {
+                  sourceStore.remove(source.id)
+                  toast.success("Source supprimée", `La source "${source.title}" a été supprimée`)
+                }
               })}
             />
           </CardContent>

@@ -1,39 +1,32 @@
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger } from "@/components/ui/sidebar"
 import { useBoardStore } from "@/store/db/board"
-import { Outlet, useNavigate, useParams } from "react-router-dom"
-import { useAppStore } from "@/store/app.store"
-import { Button } from "./ui/button"
+import { Outlet, useNavigate, useSearchParams } from "react-router-dom"
 import { Select,SelectContent,SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { ArrowLeft, PieChart, Plus, Trash } from "lucide-react"
+import { PieChart } from "lucide-react"
 import { useSettingStore } from "@/store/setting.store"
 
+import {
+  Menubar,
+  MenubarMenu,
+  MenubarTrigger,
+} from "@/components/ui/menubar"
+import { usePlanningStore } from "@/store/db/planning"
 
 export default function BoardLayout() {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const boardId = searchParams.get("boardId") || undefined
+
   const boardStore = useBoardStore()
-  const appStore = useAppStore()
+  const PlanningStore = usePlanningStore()
   const settingStore = useSettingStore()
   
   const navigate = useNavigate()
-  const { boardId } = useParams<{ boardId?: string }>()
-
-
-  const handleGoBack = () => {
-    navigate("/board")
-  }
 
   const handleGotoDetail = (id: string) => {
-    navigate(`/board/${id}`)
-  }
-
-  const handleAddBoard = () => {
-    boardStore.add({ title: `Nouveau tableau ${boardStore.list.length + 1}` })
-  }
-
-  const handleRemoveBoard = (id: string) => {
-    appStore.openDialog({
-      title: "Supprimer la tableau",
-      description: `Êtes-vous sûr de vouloir supprimer "${boardStore.getOne(id)?.title}" ?`,
-      onConfirm: () => boardStore.remove(id)
+    setSearchParams({ 
+      boardId: id, 
+      planningId: PlanningStore.getList(id)[0]?.id || "" 
     })
   }
 
@@ -45,41 +38,51 @@ export default function BoardLayout() {
       <div className="w-full flex min-h-svh">
         <Sidebar className="w-(--sidebar-width) bg-slate-950/95 text-white shadow-lg">
           <SidebarHeader className="border-b border-white/10 px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <Button variant="outline" size="icon" onClick={handleGoBack}>
-                <ArrowLeft className="size-4" />
-              </Button>
-              <p className="text-sm font-semibold">Family Eco</p>
-              <Button 
-                variant="outline" 
-                onClick={() => handleAddBoard()}
-                size="icon"
-              >
-                <Plus />
-              </Button>
-            </div>
+            Family Eco
           </SidebarHeader>
 
           <SidebarContent className="mt-8 px-2 py-3">
             <SidebarMenu className="flex flex-col gap-4">
-              { boardStore.getList()?.map((board) => (
-                <SidebarMenuItem key={board.id} className="flex">
-                  <SidebarMenuButton
-                    isActive={boardId === board.id}
-                    onClick={() => handleGotoDetail(board.id)}
-                  >
-                    <PieChart className="size-4" />
-                    <span>{board.title}</span>
-                  </SidebarMenuButton>
-                  <Button 
-                    variant="destructive" 
-                    size="icon" 
-                    onClick={() => handleRemoveBoard(board.id)}
-                  >
-                    <Trash className="size-4" />
-                  </Button>
-                </SidebarMenuItem>
-              ))}
+              <SidebarMenuItem  className="flex">
+                <SidebarMenuButton
+                  onClick={() =>  navigate("/")}
+                >
+                  <PieChart className="size-4" />
+                  <span>Plannings</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem className="flex">
+                <SidebarMenuButton
+                  onClick={() => navigate("/board")}
+                >
+                  <PieChart className="size-4" />
+                  <span>Boards</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem className="flex">
+                <SidebarMenuButton
+                  onClick={() => navigate("/source")}
+                >
+                  <PieChart className="size-4" />
+                  <span>Sources</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem className="flex">
+                <SidebarMenuButton
+                  onClick={() => navigate("/divers")}
+                >
+                  <PieChart className="size-4" />
+                  <span>Divers</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem className="flex">
+                <SidebarMenuButton
+                  onClick={() => navigate("/caisse")}
+                >
+                  <PieChart className="size-4" />
+                  <span>Caisses</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
             <SidebarSeparator />
           </SidebarContent>
@@ -102,9 +105,9 @@ export default function BoardLayout() {
             bg-background p-4 overflow-x-hidden`
           }
         >
-          <div className="flex items-center gap-4 border-b border-border pb-4">
-            <SidebarTrigger />
-            { !settingStore.displaySidebar && (
+          <div className="flex items-center justify-between border-b border-border pb-4">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger />
               <Select onValueChange={(value: string | null) => value && handleGotoDetail(value)} value={boardId || ""}>
                 <SelectTrigger>
                   <SelectValue> {boardId ? boardStore.getOne(boardId)?.title || "Sélectionner un tableau" : "Sélectionner un tableau"} </SelectValue>
@@ -117,8 +120,36 @@ export default function BoardLayout() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            { !settingStore.displaySidebar && (
+            <Menubar className="justify-between">
+              <MenubarMenu>
+                <MenubarTrigger onClick={()=>navigate("/")}>
+                  Plannings
+                </MenubarTrigger>
+              </MenubarMenu>
+              <MenubarMenu>
+                <MenubarTrigger onClick={()=>navigate("/board")}>
+                  Board
+                </MenubarTrigger>
+              </MenubarMenu>
+              <MenubarMenu>
+                <MenubarTrigger onClick={()=>navigate("/source")}>
+                  Source
+                </MenubarTrigger>
+              </MenubarMenu>
+              <MenubarMenu>
+                <MenubarTrigger onClick={()=>navigate("/divers")}>
+                  Divers
+                </MenubarTrigger>
+              </MenubarMenu>
+              <MenubarMenu>
+                <MenubarTrigger onClick={()=>navigate("/caisse")}>
+                  Caisse
+                </MenubarTrigger>
+              </MenubarMenu>
+            </Menubar>
             )}
-
           </div>
           
           <Outlet />
