@@ -23,6 +23,7 @@ export function useHistory() {
           commentaire: d.commentaire,
           amount: d.amount,
           diversId: d.diversId,
+          caisseId: d.caisseId,
         })),
         epargnes: planning.epargnes.map((e: Epargne) => ({
           id: e.id,

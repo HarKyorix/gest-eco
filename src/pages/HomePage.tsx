@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Plus, Trash, Undo2, Redo2 } from "lucide-react"
+import { ArrowLeft, Plus, Undo2, Redo2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { usePlanningStore, type Budget, type Depense, type Epargne, type Planning } from "@/store/db/planning"
 import { useSourceStore } from "@/store/db/source"
@@ -23,6 +23,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SourceTotals from "@/components/tables/SourceTotals"
 import DiversTotals from "@/components/tables/DiversTotals"
+import { DropdownMenuDestructive } from "@/components/DropdownMenuDestructive"
 
 export default function BoardDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -56,7 +57,7 @@ export default function BoardDetailPage() {
   const plannings = useMemo(() => planningStore.getList(boardId), [boardId, planningStore])
   const currentPlanning = useMemo(() => planningId ? planningStore.getOne({ id: planningId }) : null, [planningId, planningStore])
   const currentBudgetTotal = useMemo(() => currentPlanning?.budgets.reduce((total, b) => total + b.amount, 0) ?? 0, [currentPlanning])
-  const currentDepenseTotal = useMemo(() => currentPlanning?.depenses.reduce((total, d) => total + d.amount, 0) ?? 0, [currentPlanning])
+  const currentDepenseTotal = useMemo(() => currentPlanning?.depenses.filter((d) => !d.caisseId).reduce((total, d) => total + d.amount, 0) ?? 0, [currentPlanning])
   const currentEpargneTotal = useMemo(() => currentPlanning?.epargnes.reduce((total, e) => total + e.amount, 0) ?? 0, [currentPlanning])
 
   const consideredPlannings = useMemo(() => {
@@ -67,18 +68,26 @@ export default function BoardDetailPage() {
 
   // Calcul des totaux par caisse pour tous les plannings jusqu'au planning courant
   const caisseTotals = useMemo(() => {
-    const totals: Record<string, { caisseTitle: string; total: number, limit: number }> = {}
+    const totals: Record<string, { id: string; title: string; total: number, limit: number }> = {}
 
     // Initialiser avec toutes les caisses
     caisseStore.getList().forEach(caisse => {
-      totals[caisse.id] = { caisseTitle: caisse.title, total: 0, limit: Number(caisse.limit) || 0 }
+      totals[caisse.id] = { id: caisse.id, title: caisse.title, total: 0, limit: Number(caisse.limit) || 0 }
     })
 
     // Calculer les totaux depuis tous les plannings jusqu'au planning courant
     consideredPlannings.forEach(planning => {
+      // Ajouter les épargnes
       planning.epargnes.forEach(epargne => {
         if (totals[epargne.caisseId]) {
           totals[epargne.caisseId].total += epargne.amount
+        }
+      })
+      
+      // Soustraire les dépenses qui puisent dans une caisse
+      planning.depenses.forEach(depense => {
+        if (depense.caisseId && totals[depense.caisseId]) {
+          totals[depense.caisseId].total -= depense.amount
         }
       })
     })
@@ -87,11 +96,11 @@ export default function BoardDetailPage() {
   }, [consideredPlannings, caisseStore])
 
   const sourceTotals = useMemo(() => {
-    const totals: Record<string, { sourceTitle: string; total: number }> = {}
+    const totals: Record<string, { id: string; title: string; total: number }> = {}
 
     // Initialiser avec toutes les sources
     sourceStore.getList().forEach(source => {
-      totals[source.id] = { sourceTitle: source.title, total: 0 }
+      totals[source.id] = { id: source.id, title: source.title, total: 0 }
     })
 
     // Calculer les totaux depuis tous les plannings jusqu'au planning courant
@@ -107,17 +116,17 @@ export default function BoardDetailPage() {
   }, [consideredPlannings, sourceStore])
 
   const diversTotals = useMemo(() => {
-    const totals: Record<string, { diversTitle: string; total: number }> = {}
+    const totals: Record<string, { id: string; title: string; total: number }> = {}
 
     // Initialiser avec tous les divers
     diversStore.getList().forEach(divers => {
-      totals[divers.id] = { diversTitle: divers.title, total: 0 }
+      totals[divers.id] = { id: divers.id, title: divers.title, total: 0 }
     })
 
     // Calculer les totaux depuis tous les plannings jusqu'au planning courant
     consideredPlannings.forEach(planning => {
       planning.depenses.forEach(depense => {
-        if (totals[depense.diversId]) {
+        if (depense.diversId && totals[depense.diversId]) {
           totals[depense.diversId].total += depense.amount
         }
       })
@@ -216,7 +225,7 @@ export default function BoardDetailPage() {
   
   return (
     <>
-      <div className="flex items-center gap-4 my-4">
+      <div className="flex items-center flex-wrap gap-4 my-4">
         { !settingStore.displaySidebar && (
           <Button variant="outline" onClick={() => navigate("/board")} size="icon">
             <ArrowLeft className="size-4" />
@@ -269,7 +278,7 @@ export default function BoardDetailPage() {
         >
           <TabsList className="w-full flex justify-start gap-2 overflow-x-auto">
             {plannings.map((planning) => (
-              <TabsTrigger key={planning.id} value={planning.id} className="flex-none py-2">
+              <TabsTrigger key={planning.id} value={planning.id} className={`flex-none py-2 ${planning.id === planningId ? "outline" : "default"}`}>
                 {planning.title}
               </TabsTrigger>
             ))}
@@ -320,21 +329,37 @@ export default function BoardDetailPage() {
                     >
                       <Redo2 className="size-4" />
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => appStore.openDialog({
+                    <DropdownMenuDestructive
+                      onUpdate={() => appStore.openForm({
+                        title: "Modifier le planning",
+                        description: "Entrez les détails du planning",
+                        fields: [
+                          { id: "title", name: "title", label: "Titre", type: "text", defaultValue: currentPlanning?.title || "" },
+                          { id: "commentaire", name: "commentaire", label: "Commentaire", type: "textarea", defaultValue: currentPlanning?.commentaire || "" },
+                        ],
+                        onSubmit: (formData) => {
+                          planningStore.update(planningId, { 
+                            title: formData.title as string, 
+                            commentaire: formData.commentaire as string
+                          })
+                          const updated = planningStore.getOne({ id: planningId })
+                          if (updated) saveSnapshot(updated, "Planning modifié")
+                        }
+                      })}
+                      onDelete={() => appStore.openDialog({
                         title: "Supprimer le planning",
                         description: `Êtes-vous sûr de vouloir supprimer "${currentPlanning?.title}" ?`,
                         onConfirm: () => {
                           planningStore.remove(planningId)
                           toast.success("Planning supprimé", `Le planning "${currentPlanning?.title}" a été supprimé`)
-                          navigate(`/board/${boardId}`)
-                        },
+                          setSearchParams({
+                            boardId: boardId || "",
+                            plannigId: plannings[0]?.id || "",
+                            tab: "caisses"
+                          })
+                        }
                       })}
-                    >
-                      <Trash className="size-4" />
-                    </Button>
+                    />
                   </div>
                 </CardAction>
               </CardHeader>
@@ -366,6 +391,24 @@ export default function BoardDetailPage() {
                       const updated = planningStore.getOne({ id: planningId })
                       if (updated) saveSnapshot(updated, "Budget modifié")
                     }}
+                    updateBudgetModal={(id: string, data: Partial<Budget>) => {
+                      appStore.openForm({
+                        title: "Modifier le budget",
+                        description: "Entrez les détails du budget",
+                        fields: [
+                          { id: "amount", name: "amount", label: "Montant", type: "number", defaultValue: data.amount?.toString() || "0" },
+                          { id: "sourceId", name: "sourceId", label: "Source", type: "select", options: sourceStore.getList().map(s => ({ label: s.title, value: s.id })), defaultValue: data.sourceId || undefined }
+                        ],
+                        onSubmit: (formData) => {
+                          planningStore.updateBudget(planningId, id, { 
+                            amount: parseFloat(formData.amount as string),
+                            sourceId: formData.sourceId as string,
+                          })
+                          const updated = planningStore.getOne({ id: planningId })
+                          if (updated) saveSnapshot(updated, "Budget modifié")
+                        }
+                      })
+                    }}
                     deleteBudget={(id: string) => appStore.openDialog({
                       title: "Supprimer le budget",
                       description: `Êtes-vous sûr de vouloir supprimer ce budget ?`,
@@ -381,18 +424,35 @@ export default function BoardDetailPage() {
                     currency={settingStore.currency}
                     currentDepenseTotal={currentDepenseTotal}
                     divers={diversStore.getList()}
+                    caisses={caisseStore.getList()}
                     depenses={currentPlanning?.depenses || []} 
                     addDepense={() => appStore.openForm({
                       title: "Ajouter une dépense",
                       description: "Entrez les détails de la nouvelle dépense",
                       fields: [
-                        { id: "amount", name: "amount", label: "Montant", type: "number", max: Math.max(0, currentBudgetTotal - currentDepenseTotal).toString(), min: "0" },
-                        { id: "diversId", name: "diversId", label: "Divers", type: "select", options: diversStore.getList().map(d => ({ label: d.title, value: d.id })) }
+                        { id: "caisseId", name: "caisseId", label: "Puiser dans une caisse (optionnel)", type: "select", options: caisseTotals.map(c => ({ label: c.title, value: c.id })) },
+                        { 
+                          id: "amount", 
+                          name: "amount", 
+                          label: "Montant", 
+                          type: "number", 
+                          min: "0",
+                          getDynamicMax: (values: Record<string, string>) => {
+                            const selectedCaisseId = values.caisseId;
+                            if (selectedCaisseId) {
+                              const caisse = caisseTotals.find(c => c.id === selectedCaisseId);
+                              return caisse?.total.toString() || "0";
+                            }
+                            return Math.max(0, currentBudgetTotal - currentDepenseTotal).toString();
+                          }
+                        },
+                        { id: "diversId", name: "diversId", label: "Catégorie (Divers)", type: "select", options: diversStore.getList().map(d => ({ label: d.title, value: d.id })) },
                       ],
                       onSubmit: (formData) => {
                         planningStore.addDepense(planningId, { 
                           amount: parseFloat(formData.amount as string), 
-                          diversId: formData.diversId as string 
+                          diversId: formData.diversId as string || undefined,
+                          caisseId: formData.caisseId as string || undefined
                         })
                         const updated = planningStore.getOne({ id: planningId })
                         if (updated) saveSnapshot(updated, "Dépense ajoutée")
@@ -402,6 +462,41 @@ export default function BoardDetailPage() {
                       planningStore.updateDepense(planningId, id, data)
                       const updated = planningStore.getOne({ id: planningId })
                       if (updated) saveSnapshot(updated, "Dépense modifiée")
+                    }}
+                    updateDepenseModal={(id: string, data: Partial<Depense>) => {
+                      appStore.openForm({
+                        title: "Modifier la dépense",
+                        description: "Entrez les détails de la dépense",
+                        fields: [
+                          { id: "caisseId", name: "caisseId", label: "Puiser dans une caisse (optionnel)", type: "select", options: caisseTotals.map(c => ({ label: c.title, value: c.id })), defaultValue: data.caisseId || undefined },
+                          { 
+                            id: "amount", 
+                            name: "amount", 
+                            label: "Montant", 
+                            type: "number", 
+                            defaultValue: data.amount?.toString() || "0",
+                            min: "0",
+                            getDynamicMax: (values: Record<string, string>) => {
+                              const selectedCaisseId = values.caisseId;
+                              if (selectedCaisseId) {
+                                const caisse = caisseTotals.find(c => c.id === selectedCaisseId);
+                                return caisse?.total.toString() || "0";
+                              }
+                              return Math.max(0, currentBudgetTotal - currentDepenseTotal + (data.amount || 0)).toString();
+                            }
+                          },
+                          { id: "diversId", name: "diversId", label: "Catégorie (Divers)", type: "select", options: diversStore.getList().map(d => ({ label: d.title, value: d.id })), defaultValue: data.diversId || undefined },
+                        ],
+                        onSubmit: (formData) => {
+                          planningStore.updateDepense(planningId, id, { 
+                            amount: parseFloat(formData.amount as string), 
+                            diversId: formData.diversId as string || undefined,
+                            caisseId: formData.caisseId as string || undefined
+                          })
+                          const updated = planningStore.getOne({ id: planningId })
+                          if (updated) saveSnapshot(updated, "Dépense modifiée")
+                        }
+                      })
                     }}
                     deleteDepense={(id: string) => appStore.openDialog({
                       title: "Supprimer la dépense",
@@ -439,6 +534,24 @@ export default function BoardDetailPage() {
                       planningStore.updateEpargne(planningId, id, data)
                       const updated = planningStore.getOne({ id: planningId })
                       if (updated) saveSnapshot(updated, "Épargne modifiée")
+                    }}
+                    updateEpargneModal={(id: string, data: Partial<Epargne>) => {
+                      appStore.openForm({
+                        title: "Modifier l'épargne",
+                        description: "Entrez les détails de l'épargne",
+                        fields: [
+                          { id: "amount", name: "amount", label: "Montant", type: "number", defaultValue: data.amount?.toString() || "0" },
+                          { id: "caisseId", name: "caisseId", label: "Caisse", type: "select", options: caisseStore.getList().map(c => ({ label: c.title, value: c.id })), defaultValue: data.caisseId || undefined }
+                        ],
+                        onSubmit: (formData) => {
+                          planningStore.updateEpargne(planningId, id, { 
+                            amount: parseFloat(formData.amount as string), 
+                            caisseId: formData.caisseId as string 
+                          })
+                          const updated = planningStore.getOne({ id: planningId })
+                          if (updated) saveSnapshot(updated, "Épargne modifiée")
+                        }
+                      })
                     }}
                     deleteEpargne={(id: string) => appStore.openDialog({
                       title: "Supprimer l'épargne",

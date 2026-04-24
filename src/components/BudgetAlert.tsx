@@ -34,7 +34,7 @@ export function BudgetAlert({
     return (
       <Alert className="flex items-center justify-center border-red-200 bg-red-50">
         <AlertCircle className="size-4 text-red-600" />
-        <AlertTitle className="text-red-900">Dépassement budgétaire</AlertTitle>
+        <AlertTitle className="text-red-900 mb-0">Dépassement budgétaire</AlertTitle>
         <AlertDescription className="text-red-800">
           Vous avez dépassé votre budget de{" "}
           <span className="font-semibold">
@@ -50,7 +50,7 @@ export function BudgetAlert({
     return (
       <Alert className="flex items-center justify-center border-green-200 bg-green-50">
         <CheckCircle2 className="size-4 text-green-600" />
-        <AlertTitle className="text-green-900">Budget exact</AlertTitle>
+        <AlertTitle className="text-green-900 mb-0">Budget exact</AlertTitle>
         <AlertDescription className="text-green-800">
           Votre budget est entièrement alloué (dépenses + épargnes)
         </AlertDescription>
@@ -62,7 +62,7 @@ export function BudgetAlert({
     return (
       <Alert className="flex items-center justify-center border-orange-200 bg-orange-50">
         <AlertTriangle className="size-4 text-orange-600" />
-        <AlertTitle className="text-orange-900">Budget faible</AlertTitle>
+        <AlertTitle className="text-orange-900 mb-0">Budget faible</AlertTitle>
         <AlertDescription className="text-orange-800">
           Il vous reste{" "}
           <span className="font-semibold">
@@ -77,7 +77,7 @@ export function BudgetAlert({
   return (
     <Alert className="flex justify-center border-blue-200 bg-blue-50">
       <CheckCircle2 className="size-4 text-blue-600" />
-      <AlertTitle className="text-blue-900">Budget sain</AlertTitle>
+      <AlertTitle className="text-blue-900 mb-0">Budget sain</AlertTitle>
       <AlertDescription className="text-blue-800">
         Il vous reste{" "}
         <span className="font-semibold">

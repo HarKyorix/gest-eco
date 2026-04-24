@@ -3,7 +3,7 @@ import { Field, FieldLabel } from "../ui/field";
 import { Progress } from "../ui/progress";
 
 interface CaisseTotalsProps {
-  caisseTotals: Array<{ caisseTitle: string; total: number; limit?: number }>
+  caisseTotals: Array<{ id: string; title: string; total: number; limit?: number }>
   currency: string
 }
 
@@ -22,7 +22,7 @@ export default function CaisseTotals({ caisseTotals, currency }: CaisseTotalsPro
           <TableBody>
             {caisseTotals.map((item, index) => (
               <TableRow key={index} className="text-left">
-                <TableCell className="text-left font-medium">{item.caisseTitle}</TableCell>
+                <TableCell className="text-left font-medium">{item.title}</TableCell>
                 <TableCell className="text-center">
                   {item.limit && item.limit > 0 ? (
                     <Field className="w-full max-w-sm">

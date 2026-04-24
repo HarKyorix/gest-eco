@@ -1,21 +1,15 @@
 
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemTitle,
-} from "@/components/ui/item"
-import { Button } from "./ui/button";
-import { Trash } from "lucide-react";
+import {  Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
 import TextEditable from "./TextEditable";
+import { DropdownMenuDestructive } from "./DropdownMenuDestructive";
+import type { Budget, Depense, Epargne } from "@/store/db/planning";
 
 type ItemWithActions = {
   title?: string;
   amount?: number;
   commentaire?: string;
-  onUpdate?: (data: { title?: string; amount?: number; commentaire?: string }) => void;
+  onUpdate?: (data: Partial<Budget | Depense | Epargne>) => void;
+  onUpdateModal?: (data: Partial<Budget | Depense | Epargne>) => void;
   onDelete?: () => void;
 }
 
@@ -31,14 +25,15 @@ export function ItemGroupContainer({ currency, list }: { currency?: string; list
                   <TextEditable
                     value={item.commentaire}
                     onSave={(value) => item.onUpdate!({ commentaire: value })}
+                    className="text-left"
                   >
                     {item.commentaire}
                   </TextEditable>
                 ) 
                 :
-                (<span>{item.commentaire}</span>)
+                (<span className="w-1/2 text-left truncate">{item.commentaire}</span>)
                 :
-                <span className="truncate">{item.title}</span>
+                <span className="w-1/2 text-left truncate">{item.title}</span>
               }
               {item.onUpdate ? (
                 <TextEditable
@@ -47,13 +42,13 @@ export function ItemGroupContainer({ currency, list }: { currency?: string; list
                   type="number"
                   className="text-right"
                 >
-                  <span>{item.amount} {currency}</span>
+                  <span className="text-xs">{item.amount} {currency}</span>
                 </TextEditable>
               ) : (
-                <span>{item.amount} {currency}</span>
+                <span className="text-xs">{item.amount} {currency}</span>
               )}
             </ItemTitle>
-            <ItemDescription className="text-xs">
+            <ItemDescription className="text-left text-xs">
               {item.commentaire ? 
                 (<span>{item.title}</span>)
                 :
@@ -71,15 +66,10 @@ export function ItemGroupContainer({ currency, list }: { currency?: string; list
             </ItemDescription>
           </ItemContent>
           <ItemActions>
-            {item.onDelete && (
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => item.onDelete!()}
-              >
-                <Trash className="size-4" />
-              </Button>
-            )}
+            <DropdownMenuDestructive
+              onUpdate={(data) => item.onUpdateModal?.(data as Partial<Budget | Depense | Epargne>)}
+              onDelete={item.onDelete}
+            />
           </ItemActions>
         </Item>
       ))}

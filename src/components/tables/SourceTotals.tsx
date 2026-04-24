@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface SourceTotalsProps {
-  sourceTotals: Array<{ sourceTitle: string; total: number }>
+  sourceTotals: Array<{ id: string; title: string; total: number }>
   currency: string
 }
 
@@ -19,7 +19,7 @@ export default function SourceTotals({ sourceTotals, currency }: SourceTotalsPro
           <TableBody>
             {sourceTotals.map((item, index) => (
               <TableRow key={index} className="text-left">
-                <TableCell className="text-left font-medium">{item.sourceTitle}</TableCell>
+                <TableCell className="text-left font-medium">{item.title}</TableCell>
                 <TableCell className="text-right font-semibold">
                   {item.total} {currency}
                 </TableCell>

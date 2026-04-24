@@ -4,6 +4,7 @@ import { ItemGroupContainer } from "@/components/ItemGroupContainer"
 import { Button } from "@/components/ui/button"
 import { type Depense } from "@/store/db/planning"
 import type { Divers } from "@/store/db/divers"
+import type { Caisse } from "@/store/db/caisse"
 import { SearchAndSort } from "@/components/SearchAndSort"
 import { useSearchAndSort } from "@/hooks/useSearchAndSort"
 
@@ -11,17 +12,21 @@ interface DepenseSectionProps {
   currency?: string;
   currentDepenseTotal: number;
   divers: Divers[]
+  caisses: Caisse[]
   depenses: Depense[]
   addDepense: () => void
   updateDepense: (id: string, data: Partial<Depense>) => void
+  updateDepenseModal: (id: string, data: Partial<Depense>) => void
   deleteDepense: (id: string) => void
 }
 
-export function DepenseSection({ currentDepenseTotal, currency, divers, depenses, addDepense, updateDepense, deleteDepense }: DepenseSectionProps) {
+export function DepenseSection({ currentDepenseTotal, currency, divers, caisses, depenses, addDepense, updateDepense, updateDepenseModal, deleteDepense }: DepenseSectionProps) {
   const { filteredAndSorted, searchValue, setSearchValue, sortBy, setSortBy, sortOrder, setSortOrder } = useSearchAndSort(
     depenses.map((depense) => ({
       ...depense,
-      title: divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
+      title: depense.caisseId 
+        ? `📦 ${caisses.find((c) => c.id === depense.caisseId)?.title || "Caisse inconnue"}`
+        : divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
     }))
   )
   
@@ -54,10 +59,13 @@ export function DepenseSection({ currentDepenseTotal, currency, divers, depenses
         <ItemGroupContainer
           currency={currency}
           list={filteredAndSorted.map((depense) => ({
-            title: divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
+            title: depense.caisseId 
+              ? `${divers.find((d) => d.id === depense.diversId)?.title || "Divers inconnu"} 📦 ${caisses.find((c) => c.id === depense.caisseId)?.title || "Caisse inconnue"}`
+              : divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
             amount: depense.amount,
             commentaire: depense.commentaire,
             onUpdate: (data) => updateDepense(depense.id, { ...data }),
+            onUpdateModal: (data) => updateDepenseModal(depense.id, { ...depense, ...data }),
             onDelete: () => deleteDepense(depense.id),
           }))}
         />

@@ -10,7 +10,8 @@ export interface HistoryState {
   }>
   depenses: Array<{ 
     id: string
-    diversId: string
+    diversId?: string
+    caisseId?: string
     amount: number
     commentaire?: string
   }>

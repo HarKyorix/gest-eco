@@ -14,10 +14,11 @@ interface BudgetSectionProps {
   sources: Source[]
   addBudget: () => void
   updateBudget: (id: string, data: Partial<Budget>) => void
+  updateBudgetModal: (id: string, data: Partial<Budget>) => void
   deleteBudget: (id: string) => void
 }
 
-export function BudgetSection({ currentBudgetTotal, currency, budgets, sources, addBudget, updateBudget, deleteBudget }: BudgetSectionProps) {
+export function BudgetSection({ currentBudgetTotal, currency, budgets, sources, addBudget, updateBudget, updateBudgetModal, deleteBudget }: BudgetSectionProps) {
   const { filteredAndSorted, searchValue, setSearchValue, sortBy, setSortBy, sortOrder, setSortOrder } = useSearchAndSort(
     budgets.map((budget) => ({
       ...budget,
@@ -58,6 +59,7 @@ export function BudgetSection({ currentBudgetTotal, currency, budgets, sources, 
             amount: budget.amount,
             commentaire: budget.commentaire,
             onUpdate: (data) => updateBudget(budget.id, { ...data }),
+            onUpdateModal: (data) => updateBudgetModal(budget.id, { ...budget, ...data }),
             onDelete: () => deleteBudget(budget.id),
           }))}
         />
