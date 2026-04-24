@@ -117,7 +117,7 @@ export default function CaissePage() {
                   { id: "title", name: "title", label: "Titre", type: "text" },
                   { id: "limit", name: "limit", label: "Limite", type: "number" }
                 ],
-                initialData: { title: caisse.title, limit: caisse.limit },
+                initialData: { title: caisse.title, limit: caisse.limit ?? 0 },
                 onSubmit: (data) => caisseStore.update(caisse.id, { title: data.title as string, limit: parseFloat(data.limit as string) || 0 })
               })}
               onDelete={(caisse) => appStore.openDialog({
