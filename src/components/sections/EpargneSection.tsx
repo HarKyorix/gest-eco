@@ -14,10 +14,11 @@ interface EpargneSectionProps {
   epargnes: Epargne[]
   addEpargne: () => void
   updateEpargne: (id: string, data: Partial<Epargne>) => void
+  updateEpargneModal: (id: string, data: Partial<Epargne>) => void
   deleteEpargne: (id: string) => void
 }
 
-export function EpargneSection({ currentEpargneTotal, currency, caisses, epargnes, addEpargne, updateEpargne, deleteEpargne }: EpargneSectionProps) {
+export function EpargneSection({ currentEpargneTotal, currency, caisses, epargnes, addEpargne, updateEpargne, updateEpargneModal, deleteEpargne }: EpargneSectionProps) {
   const { filteredAndSorted, searchValue, setSearchValue, sortBy, setSortBy, sortOrder, setSortOrder } = useSearchAndSort(
     epargnes.map((epargne) => ({
       ...epargne,
@@ -58,6 +59,7 @@ export function EpargneSection({ currentEpargneTotal, currency, caisses, epargne
             amount: epargne.amount,
             commentaire: epargne.commentaire,
             onUpdate: (data) => updateEpargne(epargne.id, { ...data }),
+            onUpdateModal: (data) => updateEpargneModal(epargne.id, { ...epargne, ...data }),
             onDelete: () => deleteEpargne(epargne.id),
           }))}
         />

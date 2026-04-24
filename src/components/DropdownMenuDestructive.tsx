@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-export function DropdownMenuDestructive({onUpdate, onDelete}: {onUpdate?: () => void, onDelete?: () => void}) {
+export function DropdownMenuDestructive({onUpdate, onDelete}: {onUpdate?: (data: unknown) => void, onDelete?: () => void}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -18,7 +18,7 @@ export function DropdownMenuDestructive({onUpdate, onDelete}: {onUpdate?: () => 
       <DropdownMenuContent>
         <DropdownMenuGroup>
           {onUpdate && (
-            <DropdownMenuItem onSelect={onUpdate}>
+            <DropdownMenuItem onClick={onUpdate}>
               
               <PencilIcon />
               Edit
@@ -28,7 +28,7 @@ export function DropdownMenuDestructive({onUpdate, onDelete}: {onUpdate?: () => 
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           {onDelete && (
-            <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+            <DropdownMenuItem variant="destructive" onClick={onDelete}>
               <TrashIcon />
               Delete
             </DropdownMenuItem>

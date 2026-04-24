@@ -1,21 +1,15 @@
 
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemTitle,
-} from "@/components/ui/item"
-import { Button } from "./ui/button";
-import { Trash } from "lucide-react";
+import {  Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemTitle } from "@/components/ui/item"
 import TextEditable from "./TextEditable";
+import { DropdownMenuDestructive } from "./DropdownMenuDestructive";
+import type { Budget, Depense, Epargne } from "@/store/db/planning";
 
 type ItemWithActions = {
   title?: string;
   amount?: number;
   commentaire?: string;
-  onUpdate?: (data: { title?: string; amount?: number; commentaire?: string }) => void;
+  onUpdate?: (data: Partial<Budget | Depense | Epargne>) => void;
+  onUpdateModal?: (data: Partial<Budget | Depense | Epargne>) => void;
   onDelete?: () => void;
 }
 
@@ -71,15 +65,10 @@ export function ItemGroupContainer({ currency, list }: { currency?: string; list
             </ItemDescription>
           </ItemContent>
           <ItemActions>
-            {item.onDelete && (
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => item.onDelete!()}
-              >
-                <Trash className="size-4" />
-              </Button>
-            )}
+            <DropdownMenuDestructive
+              onUpdate={(data) => item.onUpdateModal?.(data as Partial<Budget | Depense | Epargne>)}
+              onDelete={item.onDelete}
+            />
           </ItemActions>
         </Item>
       ))}

@@ -14,10 +14,11 @@ interface DepenseSectionProps {
   depenses: Depense[]
   addDepense: () => void
   updateDepense: (id: string, data: Partial<Depense>) => void
+  updateDepenseModal: (id: string, data: Partial<Depense>) => void
   deleteDepense: (id: string) => void
 }
 
-export function DepenseSection({ currentDepenseTotal, currency, divers, depenses, addDepense, updateDepense, deleteDepense }: DepenseSectionProps) {
+export function DepenseSection({ currentDepenseTotal, currency, divers, depenses, addDepense, updateDepense, updateDepenseModal, deleteDepense }: DepenseSectionProps) {
   const { filteredAndSorted, searchValue, setSearchValue, sortBy, setSortBy, sortOrder, setSortOrder } = useSearchAndSort(
     depenses.map((depense) => ({
       ...depense,
@@ -58,6 +59,7 @@ export function DepenseSection({ currentDepenseTotal, currency, divers, depenses
             amount: depense.amount,
             commentaire: depense.commentaire,
             onUpdate: (data) => updateDepense(depense.id, { ...data }),
+            onUpdateModal: (data) => updateDepenseModal(depense.id, { ...depense, ...data }),
             onDelete: () => deleteDepense(depense.id),
           }))}
         />

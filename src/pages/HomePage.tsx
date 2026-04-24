@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Plus, Trash, Undo2, Redo2 } from "lucide-react"
+import { ArrowLeft, Plus, Undo2, Redo2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { usePlanningStore, type Budget, type Depense, type Epargne, type Planning } from "@/store/db/planning"
 import { useSourceStore } from "@/store/db/source"
@@ -23,6 +23,7 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import SourceTotals from "@/components/tables/SourceTotals"
 import DiversTotals from "@/components/tables/DiversTotals"
+import { DropdownMenuDestructive } from "@/components/DropdownMenuDestructive"
 
 export default function BoardDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -269,7 +270,7 @@ export default function BoardDetailPage() {
         >
           <TabsList className="w-full flex justify-start gap-2 overflow-x-auto">
             {plannings.map((planning) => (
-              <TabsTrigger key={planning.id} value={planning.id} className="flex-none py-2">
+              <TabsTrigger key={planning.id} value={planning.id} className={`flex-none py-2 ${planning.id === planningId ? "outline" : "default"}`}>
                 {planning.title}
               </TabsTrigger>
             ))}
@@ -320,21 +321,37 @@ export default function BoardDetailPage() {
                     >
                       <Redo2 className="size-4" />
                     </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => appStore.openDialog({
+                    <DropdownMenuDestructive
+                      onUpdate={() => appStore.openForm({
+                        title: "Modifier le planning",
+                        description: "Entrez les détails du planning",
+                        fields: [
+                          { id: "title", name: "title", label: "Titre", type: "text", defaultValue: currentPlanning?.title || "" },
+                          { id: "commentaire", name: "commentaire", label: "Commentaire", type: "textarea", defaultValue: currentPlanning?.commentaire || "" },
+                        ],
+                        onSubmit: (formData) => {
+                          planningStore.update(planningId, { 
+                            title: formData.title as string, 
+                            commentaire: formData.commentaire as string
+                          })
+                          const updated = planningStore.getOne({ id: planningId })
+                          if (updated) saveSnapshot(updated, "Planning modifié")
+                        }
+                      })}
+                      onDelete={() => appStore.openDialog({
                         title: "Supprimer le planning",
                         description: `Êtes-vous sûr de vouloir supprimer "${currentPlanning?.title}" ?`,
                         onConfirm: () => {
                           planningStore.remove(planningId)
                           toast.success("Planning supprimé", `Le planning "${currentPlanning?.title}" a été supprimé`)
-                          navigate(`/board/${boardId}`)
-                        },
+                          setSearchParams({
+                            boardId: boardId || "",
+                            plannigId: planningStore.getList(boardId)[0]?.id || "",
+                            tab: "caisses"
+                          })
+                        }
                       })}
-                    >
-                      <Trash className="size-4" />
-                    </Button>
+                    />
                   </div>
                 </CardAction>
               </CardHeader>
@@ -365,6 +382,24 @@ export default function BoardDetailPage() {
                       planningStore.updateBudget(planningId, id, data)
                       const updated = planningStore.getOne({ id: planningId })
                       if (updated) saveSnapshot(updated, "Budget modifié")
+                    }}
+                    updateBudgetModal={(id: string, data: Partial<Budget>) => {
+                      appStore.openForm({
+                        title: "Modifier le budget",
+                        description: "Entrez les détails du budget",
+                        fields: [
+                          { id: "amount", name: "amount", label: "Montant", type: "number", defaultValue: data.amount?.toString() || "0" },
+                          { id: "sourceId", name: "sourceId", label: "Source", type: "select", options: sourceStore.getList().map(s => ({ label: s.title, value: s.id })), defaultValue: data.sourceId || undefined }
+                        ],
+                        onSubmit: (formData) => {
+                          planningStore.updateBudget(planningId, id, { 
+                            amount: parseFloat(formData.amount as string),
+                            sourceId: formData.sourceId as string,
+                          })
+                          const updated = planningStore.getOne({ id: planningId })
+                          if (updated) saveSnapshot(updated, "Budget modifié")
+                        }
+                      })
                     }}
                     deleteBudget={(id: string) => appStore.openDialog({
                       title: "Supprimer le budget",
@@ -403,6 +438,24 @@ export default function BoardDetailPage() {
                       const updated = planningStore.getOne({ id: planningId })
                       if (updated) saveSnapshot(updated, "Dépense modifiée")
                     }}
+                    updateDepenseModal={(id: string, data: Partial<Depense>) => {
+                      appStore.openForm({
+                        title: "Modifier la dépense",
+                        description: "Entrez les détails de la dépense",
+                        fields: [
+                          { id: "amount", name: "amount", label: "Montant", type: "number", defaultValue: data.amount?.toString() || "0" },
+                          { id: "diversId", name: "diversId", label: "Divers", type: "select", options: diversStore.getList().map(d => ({ label: d.title, value: d.id })), defaultValue: data.diversId || undefined }
+                        ],
+                        onSubmit: (formData) => {
+                          planningStore.updateDepense(planningId, id, { 
+                            amount: parseFloat(formData.amount as string), 
+                            diversId: formData.diversId as string 
+                          })
+                          const updated = planningStore.getOne({ id: planningId })
+                          if (updated) saveSnapshot(updated, "Dépense modifiée")
+                        }
+                      })
+                    }}
                     deleteDepense={(id: string) => appStore.openDialog({
                       title: "Supprimer la dépense",
                       description: `Êtes-vous sûr de vouloir supprimer cette dépense ?`,
@@ -439,6 +492,24 @@ export default function BoardDetailPage() {
                       planningStore.updateEpargne(planningId, id, data)
                       const updated = planningStore.getOne({ id: planningId })
                       if (updated) saveSnapshot(updated, "Épargne modifiée")
+                    }}
+                    updateEpargneModal={(id: string, data: Partial<Epargne>) => {
+                      appStore.openForm({
+                        title: "Modifier l'épargne",
+                        description: "Entrez les détails de l'épargne",
+                        fields: [
+                          { id: "amount", name: "amount", label: "Montant", type: "number", defaultValue: data.amount?.toString() || "0" },
+                          { id: "caisseId", name: "caisseId", label: "Caisse", type: "select", options: caisseStore.getList().map(c => ({ label: c.title, value: c.id })), defaultValue: data.caisseId || undefined }
+                        ],
+                        onSubmit: (formData) => {
+                          planningStore.updateEpargne(planningId, id, { 
+                            amount: parseFloat(formData.amount as string), 
+                            caisseId: formData.caisseId as string 
+                          })
+                          const updated = planningStore.getOne({ id: planningId })
+                          if (updated) saveSnapshot(updated, "Épargne modifiée")
+                        }
+                      })
                     }}
                     deleteEpargne={(id: string) => appStore.openDialog({
                       title: "Supprimer l'épargne",
