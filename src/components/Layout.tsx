@@ -19,7 +19,7 @@ export default function Layout() {
   const boardId = searchParams.get("boardId") || undefined
 
   const boardStore = useBoardStore()
-  const PlanningStore = usePlanningStore()
+  const planningStore = usePlanningStore()
   const settingStore = useSettingStore()
   
   const navigate = useNavigate()
@@ -27,7 +27,7 @@ export default function Layout() {
   const handleGotoDetail = (id: string) => {
     setSearchParams({ 
       boardId: id, 
-      planningId: PlanningStore.getList(id)[0]?.id || "" 
+      planningId: planningStore.getList(id)[0]?.id || "" 
     })
   }
 
@@ -44,14 +44,6 @@ export default function Layout() {
 
           <SidebarContent className="mt-8 px-2 py-3">
             <SidebarMenu className="flex flex-col gap-4">
-              <SidebarMenuItem  className="flex">
-                <SidebarMenuButton
-                  onClick={() =>  navigate("/")}
-                >
-                  <PieChart className="size-4" />
-                  <span>Plannings</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem className="flex">
                 <SidebarMenuButton
                   onClick={() => navigate("/board")}
@@ -103,6 +95,7 @@ export default function Layout() {
           <div className="flex items-center justify-between flex-wrap gap-4 border-b border-border pb-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
+              { boardId && (
               <Select onValueChange={(value: string | null) => value && handleGotoDetail(value)} value={boardId || ""}>
                 <SelectTrigger>
                   <SelectValue> {boardId ? boardStore.getOne(boardId)?.title || "Sélectionner un tableau" : "Sélectionner un tableau"} </SelectValue>
@@ -115,14 +108,10 @@ export default function Layout() {
                   ))}
                 </SelectContent>
               </Select>
+              )}
             </div>
             { !settingStore.displaySidebar && (
             <Menubar className="justify-between">
-              <MenubarMenu>
-                <MenubarTrigger onClick={()=>navigate("/")}>
-                  Plannings
-                </MenubarTrigger>
-              </MenubarMenu>
               <MenubarMenu>
                 <MenubarTrigger onClick={()=>navigate("/board")}>
                   Board

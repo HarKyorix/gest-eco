@@ -1,8 +1,9 @@
-import { ArrowRight, Edit, Plus, Trash2 } from "lucide-react"
+import { ArrowRight, Edit, Plus, Trash2, Layout } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Board } from "@/store/db/board"
+import { EmptyState } from "@/components/EmptyState"
 
 interface BoardsSectionProps {
   display?: 'list' | 'grid';
@@ -35,7 +36,15 @@ export function BoardsSection({ display = 'grid', boards, onAdd, onNavigateList,
         </div>
       </div>
 
-      {display === 'grid' ? (
+      {boards.length === 0 ? (
+        <EmptyState
+          icon={Layout}
+          title="Aucun tableau"
+          description="Créez votre premier tableau pour commencer à gérer votre économie familiale"
+          actionLabel="Créer un tableau"
+          onAction={onAdd}
+        />
+      ) : display === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {boards.map((board) => (
             <Card key={board.id} className="flex flex-col">
@@ -84,7 +93,20 @@ export function BoardsSection({ display = 'grid', boards, onAdd, onNavigateList,
             </TableRow>
           </TableHeader>
           <TableBody>
-            {boards.map((board) => (
+            {boards.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center py-8">
+                  <EmptyState
+                    icon={Layout}
+                    title="Aucun tableau"
+                    description="Créez votre premier tableau pour commencer à gérer votre économie familiale"
+                    actionLabel="Créer un tableau"
+                    onAction={onAdd}
+                  />
+                </TableCell>
+              </TableRow>
+            ) : (
+              boards.map((board) => (
               <TableRow key={board.id}>
                 <TableCell className="text-left">{board.title}</TableCell>
                 <TableCell className="text-right">
@@ -113,7 +135,8 @@ export function BoardsSection({ display = 'grid', boards, onAdd, onNavigateList,
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       )}

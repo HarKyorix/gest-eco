@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -19,7 +20,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useToast } from "@/store/toast.store"
 
 export interface Option {
   label: string;
@@ -37,6 +39,8 @@ export interface Field {
   max?: string // For number type
   min?: string // For number type
   getDynamicMax?: (formValues: Record<string, string>) => string // For dynamic max calculation
+  placeholder?: string // For select type
+  showWhen?: (formValues: Record<string, string>) => boolean // Conditional field visibility
 }
 
 interface DialogFormProps {
@@ -51,8 +55,35 @@ interface DialogFormProps {
 
 export function DialogForm({ open, title, description, fields, close, submit, initialData }: DialogFormProps) {
   const formRef = useRef<HTMLFormElement>(null)
-  const [selectValues, setSelectValues] = useState<Record<string, string>>({})
+  const [selectValues, setSelectValues] = useState<Record<string, string>>(() => {
+    // Initialize with default values and initial data for select fields
+    const initial: Record<string, string> = {};
+    fields.forEach(field => {
+      if (field.type === 'select') {
+        const value = initialData?.[field.name] as string || field.defaultValue;
+        if (value) {
+          initial[field.name] = value;
+        }
+      }
+    });
+    return initial;
+  })
   const [formValues, setFormValues] = useState<Record<string, string>>({})
+  const toast = useToast()
+
+  // Reset selectValues when fields change (new form opened)
+  useEffect(() => {
+    const initial: Record<string, string> = {};
+    fields.forEach(field => {
+      if (field.type === 'select') {
+        const value = initialData?.[field.name] as string || field.defaultValue;
+        if (value) {
+          initial[field.name] = value;
+        }
+      }
+    });
+    setSelectValues(initial);
+  }, [fields, initialData])
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => !newOpen && close()}>
@@ -67,7 +98,7 @@ export function DialogForm({ open, title, description, fields, close, submit, in
             const value = formData.get(field.name);
             const numValue = value ? parseFloat(value.toString()) : 0;
             if (numValue <= 0) {
-              alert(`${field.label} doit être supérieur à 0`);
+              toast.error(`Erreur`, `${field.label} doit être supérieur à 0`);
               return;
             }
           }
@@ -110,8 +141,14 @@ export function DialogForm({ open, title, description, fields, close, submit, in
           <FieldGroup className="my-4">
             {fields.map((field, index) => {
               const fieldValue = initialData?.[field.name] || field.defaultValue;
+              // Check if field should be visible
+              if (field.showWhen && !field.showWhen({ ...selectValues, ...formValues })) {
+                return null;
+              }
               switch (field.type) {
                 case 'select':
+                  { const selectedOption = field.options?.find((o) => o.value === selectValues[field.name]) || 
+                                         field.options?.find((o) => o.value === fieldValue);
                   return (
                     <Field key={index}>
                       <Label htmlFor={field.id}>{field.label}</Label>
@@ -121,7 +158,7 @@ export function DialogForm({ open, title, description, fields, close, submit, in
                       >
                         <SelectTrigger>
                           <SelectValue>
-                            {field.options?.find((o) => o.value === selectValues[field.name])?.label || field.options?.find((o) => o.value === fieldValue)?.label || `Select ${field.label}`}
+                            {selectedOption?.label || field.placeholder || "Sélectionner une option..."}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -133,12 +170,20 @@ export function DialogForm({ open, title, description, fields, close, submit, in
                         </SelectContent>
                       </Select>
                     </Field>
-                  );
+                  ); }
                 case 'number':
                   { const dynamicMax = field.getDynamicMax ? field.getDynamicMax({ ...selectValues, ...formValues }) : field.max;
+                  const maxAmount = dynamicMax ? parseFloat(dynamicMax) : undefined;
                   return (
                     <Field key={field.id}>
-                      <Label htmlFor={field.id}>{field.label}</Label>
+                      <Label htmlFor={field.id}>
+                        {field.label}
+                        {maxAmount !== undefined && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            (Max: {maxAmount} €)
+                          </span>
+                        )}
+                      </Label>
                       <Input
                         id={field.id}
                         name={field.name}

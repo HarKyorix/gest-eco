@@ -1,5 +1,5 @@
 import { Card, CardAction, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus } from "lucide-react"
+import { Plus, TrendingDown } from "lucide-react"
 import { ItemGroupContainer } from "@/components/ItemGroupContainer"
 import { Button } from "@/components/ui/button"
 import { type Depense } from "@/store/db/planning"
@@ -7,6 +7,7 @@ import type { Divers } from "@/store/db/divers"
 import type { Caisse } from "@/store/db/caisse"
 import { SearchAndSort } from "@/components/SearchAndSort"
 import { useSearchAndSort } from "@/hooks/useSearchAndSort"
+import { EmptyState } from "@/components/EmptyState"
 
 interface DepenseSectionProps {
   currency?: string;
@@ -41,6 +42,8 @@ export function DepenseSection({ currentDepenseTotal, currency, divers, caisses,
             variant="outline"
             size="icon"
             onClick={addDepense}
+            title="Ajouter une dépense"
+            aria-label="Ajouter une dépense"
           >
             <Plus className="size-4" />
             <span className="sr-only">Ajouter une dépense</span>
@@ -48,27 +51,39 @@ export function DepenseSection({ currentDepenseTotal, currency, divers, caisses,
         </CardAction>
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground space-y-4">
-        <SearchAndSort
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          sortOrder={sortOrder}
-          onSortOrderChange={setSortOrder}
-        />
-        <ItemGroupContainer
-          currency={currency}
-          list={filteredAndSorted.map((depense) => ({
-            title: depense.caisseId 
-              ? `${divers.find((d) => d.id === depense.diversId)?.title || "Divers inconnu"} 📦 ${caisses.find((c) => c.id === depense.caisseId)?.title || "Caisse inconnue"}`
-              : divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
-            amount: depense.amount,
-            commentaire: depense.commentaire,
-            onUpdate: (data) => updateDepense(depense.id, { ...data }),
-            onUpdateModal: (data) => updateDepenseModal(depense.id, { ...depense, ...data }),
-            onDelete: () => deleteDepense(depense.id),
-          }))}
-        />
+        {depenses.length === 0 ? (
+          <EmptyState
+            icon={TrendingDown}
+            title="Aucune dépense"
+            description="Enregistrez vos premières dépenses pour cette période"
+            actionLabel="Ajouter une dépense"
+            onAction={addDepense}
+          />
+        ) : (
+          <>
+            <SearchAndSort
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+            />
+            <ItemGroupContainer
+              currency={currency}
+              list={filteredAndSorted.map((depense) => ({
+                title: depense.caisseId 
+                  ? `📦 ${caisses.find((c) => c.id === depense.caisseId)?.title || "Caisse inconnue"}`
+                  : divers.find((d) => d.id === depense.diversId)?.title || `Dépense ${depense.id.slice(0, 8)}`,
+                amount: depense.amount,
+                commentaire: depense.commentaire,
+                onUpdate: (data) => updateDepense(depense.id, { ...data }),
+                onUpdateModal: (data) => updateDepenseModal(depense.id, { ...depense, ...data }),
+                onDelete: () => deleteDepense(depense.id),
+              }))}
+            />
+          </>
+        )}
       </CardContent>
       <CardFooter className="p-2">
         <p className="text-xs text-muted-foreground">
