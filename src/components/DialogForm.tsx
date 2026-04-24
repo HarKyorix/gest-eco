@@ -36,6 +36,7 @@ export interface Field {
   multiple?: boolean // For select type
   max?: string // For number type
   min?: string // For number type
+  getDynamicMax?: (formValues: Record<string, string>) => string // For dynamic max calculation
 }
 
 interface DialogFormProps {
@@ -51,6 +52,7 @@ interface DialogFormProps {
 export function DialogForm({ open, title, description, fields, close, submit, initialData }: DialogFormProps) {
   const formRef = useRef<HTMLFormElement>(null)
   const [selectValues, setSelectValues] = useState<Record<string, string>>({})
+  const [formValues, setFormValues] = useState<Record<string, string>>({})
 
   return (
     <Dialog open={open} onOpenChange={(newOpen) => !newOpen && close()}>
@@ -94,6 +96,7 @@ export function DialogForm({ open, title, description, fields, close, submit, in
           submit(data);
           formRef.current?.reset();
           setSelectValues({});
+          setFormValues({});
           close();
         }}>
           <DialogHeader>
@@ -132,6 +135,7 @@ export function DialogForm({ open, title, description, fields, close, submit, in
                     </Field>
                   );
                 case 'number':
+                  { const dynamicMax = field.getDynamicMax ? field.getDynamicMax({ ...selectValues, ...formValues }) : field.max;
                   return (
                     <Field key={field.id}>
                       <Label htmlFor={field.id}>{field.label}</Label>
@@ -141,13 +145,14 @@ export function DialogForm({ open, title, description, fields, close, submit, in
                         type="number"
                         defaultValue={fieldValue}
                         placeholder="0"
-                        max={field.max}
+                        max={dynamicMax}
                         min={field.min || "0"}
                         step="0.01"
+                        onChange={(e) => setFormValues(prev => ({ ...prev, [field.name]: e.target.value }))}
                         required
                       />
                     </Field>
-                  );
+                  ); }
                 case 'textarea':
                   return (
                     <Field key={field.id}>

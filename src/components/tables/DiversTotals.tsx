@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface DiversTotalsProps {
-  diversTotals: Array<{ diversTitle: string; total: number }>
+  diversTotals: Array<{ id: string; title: string; total: number }>
   currency: string
 }
 
@@ -19,7 +19,7 @@ export default function DiversTotals({ diversTotals, currency }: DiversTotalsPro
           <TableBody>
             {diversTotals.map((item, index) => (
               <TableRow key={index} className="text-left">
-                <TableCell className="text-left font-medium">{item.diversTitle}</TableCell>
+                <TableCell className="text-left font-medium">{item.title}</TableCell>
                 <TableCell className="text-right font-semibold">
                   {item.total} {currency}
                 </TableCell>

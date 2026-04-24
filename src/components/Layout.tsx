@@ -1,4 +1,4 @@
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarSeparator, SidebarTrigger } from "@/components/ui/sidebar"
 import { useBoardStore } from "@/store/db/board"
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom"
 import { Select,SelectContent,SelectItem, SelectTrigger, SelectValue } from "./ui/select"
@@ -87,12 +87,6 @@ export default function Layout() {
             </SidebarMenu>
             <SidebarSeparator />
           </SidebarContent>
-
-          <SidebarFooter className="border-t border-white/10 px-4 py-4">
-            {/* <Button variant="outline" className="w-full" onClick={() => onAddTable()}>
-              Add Table
-            </Button> */}
-          </SidebarFooter>
         </Sidebar>
 
         <SidebarInset 
@@ -106,7 +100,7 @@ export default function Layout() {
             bg-background p-4 overflow-x-hidden`
           }
         >
-          <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-border pb-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
               <Select onValueChange={(value: string | null) => value && handleGotoDetail(value)} value={boardId || ""}>

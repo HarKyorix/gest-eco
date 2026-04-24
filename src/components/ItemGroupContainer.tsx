@@ -25,14 +25,15 @@ export function ItemGroupContainer({ currency, list }: { currency?: string; list
                   <TextEditable
                     value={item.commentaire}
                     onSave={(value) => item.onUpdate!({ commentaire: value })}
+                    className="text-left"
                   >
                     {item.commentaire}
                   </TextEditable>
                 ) 
                 :
-                (<span>{item.commentaire}</span>)
+                (<span className="w-1/2 text-left truncate">{item.commentaire}</span>)
                 :
-                <span className="truncate">{item.title}</span>
+                <span className="w-1/2 text-left truncate">{item.title}</span>
               }
               {item.onUpdate ? (
                 <TextEditable
@@ -41,13 +42,13 @@ export function ItemGroupContainer({ currency, list }: { currency?: string; list
                   type="number"
                   className="text-right"
                 >
-                  <span>{item.amount} {currency}</span>
+                  <span className="text-xs">{item.amount} {currency}</span>
                 </TextEditable>
               ) : (
-                <span>{item.amount} {currency}</span>
+                <span className="text-xs">{item.amount} {currency}</span>
               )}
             </ItemTitle>
-            <ItemDescription className="text-xs">
+            <ItemDescription className="text-left text-xs">
               {item.commentaire ? 
                 (<span>{item.title}</span>)
                 :

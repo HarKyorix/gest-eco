@@ -15,7 +15,8 @@ export interface Budget {
 export interface Depense {
   id: string;
   amount: number;
-  diversId: string;
+  diversId?: string;
+  caisseId?: string; // Si présent, la dépense puise dans cette caisse
   commentaire?: string;
   position?: number;
   createdAt: Date;
@@ -160,6 +161,7 @@ export const usePlanningStore = create<PlanningState>()(
           id: crypto.randomUUID(),
           amount: depense.amount || 0,
           diversId: depense.diversId || "",
+          caisseId: depense.caisseId || "",
           commentaire: depense.commentaire || "",
           position: depense.position || maxPosition + 1,
           createdAt: new Date(),
