@@ -13,17 +13,21 @@ import { useCaisseStore } from "@/store/db/caisse"
 import { useAppStore } from "@/store/app.store"
 import { useBoardStore, type Board } from "@/store/db/board"
 import { useSettingStore } from "@/store/setting.store"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import CaisseTotals from "@/components/tables/CaisseTotals"
 import { BudgetAlert } from "@/components/BudgetAlert"
 import { useDataExportImport } from "@/lib/exportImport"
 import { ExportImportButtons } from "@/components/ExportImportButtons"
 import { useToast } from "@/store/toast.store"
 import { useHistory } from "@/hooks/useHistory"
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import SourceTotals from "@/components/tables/SourceTotals"
+import DiversTotals from "@/components/tables/DiversTotals"
 
 export default function BoardDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
+  const tab = searchParams.get("tab") || undefined
   const boardId = searchParams.get("boardId") || undefined
   const planningId = searchParams.get("planningId") || undefined
 
@@ -55,17 +59,23 @@ export default function BoardDetailPage() {
   const currentDepenseTotal = useMemo(() => currentPlanning?.depenses.reduce((total, d) => total + d.amount, 0) ?? 0, [currentPlanning])
   const currentEpargneTotal = useMemo(() => currentPlanning?.epargnes.reduce((total, e) => total + e.amount, 0) ?? 0, [currentPlanning])
 
-  // Calcul des totaux par caisse pour tous les plannings du board
+  const consideredPlannings = useMemo(() => {
+    if (!planningId) return plannings
+    const index = plannings.findIndex((planning) => planning.id === planningId)
+    return index >= 0 ? plannings.slice(0, index + 1) : plannings
+  }, [plannings, planningId])
+
+  // Calcul des totaux par caisse pour tous les plannings jusqu'au planning courant
   const caisseTotals = useMemo(() => {
-    const totals: Record<string, { caisseTitle: string; total: number }> = {}
+    const totals: Record<string, { caisseTitle: string; total: number, limit: number }> = {}
 
     // Initialiser avec toutes les caisses
     caisseStore.getList().forEach(caisse => {
-      totals[caisse.id] = { caisseTitle: caisse.title, total: 0 }
+      totals[caisse.id] = { caisseTitle: caisse.title, total: 0, limit: Number(caisse.limit) || 0 }
     })
 
-    // Calculer les totaux depuis tous les plannings
-    plannings.forEach(planning => {
+    // Calculer les totaux depuis tous les plannings jusqu'au planning courant
+    consideredPlannings.forEach(planning => {
       planning.epargnes.forEach(epargne => {
         if (totals[epargne.caisseId]) {
           totals[epargne.caisseId].total += epargne.amount
@@ -74,13 +84,54 @@ export default function BoardDetailPage() {
     })
 
     return Object.values(totals).filter(item => item.total > 0)
-  }, [plannings, caisseStore])
+  }, [consideredPlannings, caisseStore])
+
+  const sourceTotals = useMemo(() => {
+    const totals: Record<string, { sourceTitle: string; total: number }> = {}
+
+    // Initialiser avec toutes les sources
+    sourceStore.getList().forEach(source => {
+      totals[source.id] = { sourceTitle: source.title, total: 0 }
+    })
+
+    // Calculer les totaux depuis tous les plannings jusqu'au planning courant
+    consideredPlannings.forEach(planning => {
+      planning.budgets.forEach(budget => {
+        if (totals[budget.sourceId]) {
+          totals[budget.sourceId].total += budget.amount
+        }
+      })
+    })
+
+    return Object.values(totals).filter(item => item.total > 0)
+  }, [consideredPlannings, sourceStore])
+
+  const diversTotals = useMemo(() => {
+    const totals: Record<string, { diversTitle: string; total: number }> = {}
+
+    // Initialiser avec tous les divers
+    diversStore.getList().forEach(divers => {
+      totals[divers.id] = { diversTitle: divers.title, total: 0 }
+    })
+
+    // Calculer les totaux depuis tous les plannings jusqu'au planning courant
+    consideredPlannings.forEach(planning => {
+      planning.depenses.forEach(depense => {
+        if (totals[depense.diversId]) {
+          totals[depense.diversId].total += depense.amount
+        }
+      })
+    })
+
+    return Object.values(totals).filter(item => item.total > 0)
+  }, [consideredPlannings, diversStore])
 
   useEffect(() => {
     if (!boardId) {
       setSearchParams({
         boardId: boardStore.list[0]?.id || "",
         planningId: planningStore.getList(boardStore.list[0]?.id)[0]?.id || "",
+        tab: "caisses"
       })
       return
     }
@@ -208,7 +259,10 @@ export default function BoardDetailPage() {
           onValueChange={(value) => {
             const nextPlanning = plannings.find((planning) => planning.id === value)
             if (nextPlanning) {
-             setSearchParams({ boardId, planningId: nextPlanning.id })
+              const nextSearch = new URLSearchParams(searchParams)
+              nextSearch.set("boardId", boardId || "")
+              nextSearch.set("planningId", nextPlanning.id)
+              setSearchParams(nextSearch)
             }
           }}
           className="flex-1 flex-col"
@@ -402,35 +456,41 @@ export default function BoardDetailPage() {
 
               <CardFooter className="mt-6">
                 <div className="w-full">
-                  {caisseTotals.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Caisse</TableHead>
-                          <TableHead className="text-right">Total épargné</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {caisseTotals.map((item, index) => (
-                          <TableRow key={index} className="text-left">
-                            <TableCell className="text-left font-medium">{item.caisseTitle}</TableCell>
-                            <TableCell className="text-right font-semibold">
-                              {item.total} {settingStore.currency}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        <TableRow className="border-t-2">
-                          <TableCell className="text-left font-bold">Total général</TableCell>
-                          <TableCell className="text-right font-bold">
-                            {caisseTotals.reduce((sum, item) => sum + item.total, 0)} {settingStore.currency}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">
-                      Aucune épargne enregistrée dans les caisses pour ce tableau.
-                    </p>
+                  <Select
+                    onValueChange={(value: string | null) => {
+                      if (!value) return
+                      const nextSearch = new URLSearchParams(searchParams)
+                      nextSearch.set("tab", value)
+                      setSearchParams(nextSearch)
+                    }}
+                    value={tab || "caisses"}
+                  >
+                    <SelectTrigger>
+                      <SelectValue> {tab || "Sélectionner un tableau"} </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="caisses">Caisses</SelectItem>
+                      <SelectItem value="sources">Sources</SelectItem>
+                      <SelectItem value="divers">Divers</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {tab === "caisses" && (
+                    <CaisseTotals 
+                      caisseTotals={caisseTotals} 
+                      currency={settingStore.currency} 
+                    />
+                  )}
+                  {tab === "sources" && (
+                    <SourceTotals 
+                      sourceTotals={sourceTotals} 
+                      currency={settingStore.currency} 
+                    />
+                  )}
+                  {tab === "divers" && (
+                    <DiversTotals 
+                      diversTotals={diversTotals} 
+                      currency={settingStore.currency} 
+                    />
                   )}
                 </div>
               </CardFooter>

@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import HomePage from "./pages/HomePage"
-import BoardLayout from "./components/BoardLayout"
+import Layout from "./components/Layout"
 import { AlertDialogDestructive } from "@/components/AlertDialogDestructive"
 import { DialogForm } from "@/components/DialogForm"
 import { useAppStore } from "./store/app.store"
@@ -33,7 +33,7 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>          
-          <Route path="/" element={<BoardLayout />}>
+          <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />}/>
             <Route path="caisse" element={<CaissePage />} />
             <Route path="divers" element={<DiversPage />} />

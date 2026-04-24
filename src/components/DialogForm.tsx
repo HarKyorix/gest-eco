@@ -36,8 +36,8 @@ interface DialogFormProps {
   description?: string
   fields: Field[]
   close: () => void
-  submit: (data: Record<string, string | string[]>) => void
-  initialData?: Record<string, string | string[]>
+  submit: (data: Record<string, string | string[] | number>) => void
+  initialData?: Record<string, string | string[] | number>
 }
 
 export function DialogForm({ open, title, description, fields, close, submit, initialData }: DialogFormProps) {

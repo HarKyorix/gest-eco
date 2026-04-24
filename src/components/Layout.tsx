@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/menubar"
 import { usePlanningStore } from "@/store/db/planning"
 
-export default function BoardLayout() {
+export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const boardId = searchParams.get("boardId") || undefined

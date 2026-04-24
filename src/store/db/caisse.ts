@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware";
 export interface Caisse {
   id: string;
   title: string;
+  limit?: number;
   position?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -53,6 +54,7 @@ export const useCaisseStore = create<CaisseState>()(
         const newCaisse: Caisse = {
           id: caisse.id || crypto.randomUUID(),
           title: caisse.title || "New Caisse",
+          limit: caisse.limit,
           position: caisse.position || get().getPosition() + 1,
           createdAt: new Date(),
           updatedAt: new Date(),
