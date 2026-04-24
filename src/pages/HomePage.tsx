@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Plus, Undo2, Redo2 } from "lucide-react"
+import { ArrowLeft, Plus, Undo2, Redo2, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { usePlanningStore, type Budget, type Depense, type Epargne, type Planning } from "@/store/db/planning"
 import { useSourceStore } from "@/store/db/source"
@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SourceTotals from "@/components/tables/SourceTotals"
 import DiversTotals from "@/components/tables/DiversTotals"
 import { DropdownMenuDestructive } from "@/components/DropdownMenuDestructive"
+import { EmptyState } from "@/components/EmptyState"
 
 export default function BoardDetailPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -54,7 +55,7 @@ export default function BoardDetailPage() {
   })
 
   const currentBoard = useMemo(() => boardId ? boardStore.getOne(boardId) : null, [boardId, boardStore])
-  const plannings = useMemo(() => planningStore.getList(boardId), [boardId, planningStore])
+  const plannings = useMemo(() => boardId ? planningStore.getList(boardId) : [], [boardId, planningStore])
   const currentPlanning = useMemo(() => planningId ? planningStore.getOne({ id: planningId }) : null, [planningId, planningStore])
   const currentBudgetTotal = useMemo(() => currentPlanning?.budgets.reduce((total, b) => total + b.amount, 0) ?? 0, [currentPlanning])
   const currentDepenseTotal = useMemo(() => currentPlanning?.depenses.filter((d) => !d.caisseId).reduce((total, d) => total + d.amount, 0) ?? 0, [currentPlanning])
@@ -139,12 +140,23 @@ export default function BoardDetailPage() {
     if (!boardId) {
       setSearchParams({
         boardId: boardStore.list[0]?.id || "",
-        planningId: planningStore.getList(boardStore.list[0]?.id)[0]?.id || "",
+        planningId: planningStore.getList(boardId || boardStore.list[0]?.id || "")[0]?.id || "",
         tab: "caisses"
       })
-      return
     }
-  }, [boardStore,planningStore, planningId, boardId, setSearchParams])
+  }, [boardStore, planningStore, planningId, boardId, setSearchParams, plannings])
+
+  const initializeApp = () => {
+    if (boardStore.list.length === 0) {
+      boardStore.init()
+      caisseStore.init()
+      sourceStore.init()
+      diversStore.init()
+      planningStore.init(boardStore.getList()[0]?.id)
+    } else if (planningStore.getList(boardId || boardStore.list[0]?.id || "").length === 0) {
+      planningStore.init(boardId || boardStore.list[0]?.id)
+    }
+  }
 
   const handleAddPlanning = () => {
     const newPlanning: Partial<Planning> = { 
@@ -218,10 +230,6 @@ export default function BoardDetailPage() {
     }
   }
 
-  // Vérifier que les paramètres requis sont présents
-  if (!boardId || !planningId) {
-    return <div>Paramètres manquants</div>
-  }
   
   return (
     <>
@@ -260,7 +268,13 @@ export default function BoardDetailPage() {
       
       {plannings.length === 0 ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Chargement des plannings...</p>
+          <EmptyState
+            icon={Calendar}
+            title="Aucune selection disponible"
+            description="Commencez maintenant"
+            actionLabel="Commencer"
+            onAction={() => initializeApp()}
+          />
         </div>
       ) : (
         <Tabs
@@ -291,6 +305,7 @@ export default function BoardDetailPage() {
             currency={settingStore.currency}
           />
           <TabsContent value={planningId} className="">
+            {planningId && (
             <Card className="gap-1">
               <CardHeader className="relative">
                 <CardTitle className="flex items-start justify-between gap-4">
@@ -364,7 +379,7 @@ export default function BoardDetailPage() {
                 </CardAction>
               </CardHeader>
               <CardContent className="max-h-[30vh] overflow-y-auto px-4">
-                <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                <div className="mt-4 grid gap-4 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                   <BudgetSection 
                     currency={settingStore.currency}
                     currentBudgetTotal={currentBudgetTotal}
@@ -428,9 +443,38 @@ export default function BoardDetailPage() {
                     depenses={currentPlanning?.depenses || []} 
                     addDepense={() => appStore.openForm({
                       title: "Ajouter une dépense",
-                      description: "Entrez les détails de la nouvelle dépense",
+                      description: "Choisissez le type de dépense et remplissez les détails",
                       fields: [
-                        { id: "caisseId", name: "caisseId", label: "Puiser dans une caisse (optionnel)", type: "select", options: caisseTotals.map(c => ({ label: c.title, value: c.id })) },
+                        { 
+                          id: "depenseType", 
+                          name: "depenseType", 
+                          label: "Type de dépense", 
+                          type: "select", 
+                          options: [
+                            { label: "📋 Divers", value: "divers" },
+                            { label: "📦 Caisse", value: "caisse" }
+                          ],
+                          defaultValue: "divers",
+                          placeholder: "Sélectionner le type..."
+                        },
+                        { 
+                          id: "diversId", 
+                          name: "diversId", 
+                          label: "Divers", 
+                          type: "select", 
+                          options: diversStore.getList().map(d => ({ label: d.title, value: d.id })),
+                          placeholder: "Sélectionner un divers...",
+                          showWhen: (values) => values.depenseType === "divers" || !values.depenseType
+                        },
+                        { 
+                          id: "caisseId", 
+                          name: "caisseId", 
+                          label: "Caisse", 
+                          type: "select", 
+                          options: caisseTotals.map(c => ({ label: `${c.title} (${c.total} ${settingStore.currency})`, value: c.id })),
+                          placeholder: "Sélectionner une caisse...",
+                          showWhen: (values) => values.depenseType === "caisse"
+                        },
                         { 
                           id: "amount", 
                           name: "amount", 
@@ -438,21 +482,25 @@ export default function BoardDetailPage() {
                           type: "number", 
                           min: "0",
                           getDynamicMax: (values: Record<string, string>) => {
-                            const selectedCaisseId = values.caisseId;
-                            if (selectedCaisseId) {
-                              const caisse = caisseTotals.find(c => c.id === selectedCaisseId);
-                              return caisse?.total.toString() || "0";
+                            const depenseType = values.depenseType || "divers";
+                            if (depenseType === "caisse") {
+                              const selectedCaisseId = values.caisseId;
+                              if (selectedCaisseId) {
+                                const caisse = caisseTotals.find(c => c.id === selectedCaisseId);
+                                return caisse?.total.toString() || "0";
+                              }
+                              return "0";
                             }
                             return Math.max(0, currentBudgetTotal - currentDepenseTotal).toString();
                           }
                         },
-                        { id: "diversId", name: "diversId", label: "Catégorie (Divers)", type: "select", options: diversStore.getList().map(d => ({ label: d.title, value: d.id })) },
                       ],
                       onSubmit: (formData) => {
+                        const depenseType = formData.depenseType || "divers";
                         planningStore.addDepense(planningId, { 
                           amount: parseFloat(formData.amount as string), 
-                          diversId: formData.diversId as string || undefined,
-                          caisseId: formData.caisseId as string || undefined
+                          diversId: depenseType === "divers" ? (formData.diversId as string || undefined) : undefined,
+                          caisseId: depenseType === "caisse" ? (formData.caisseId as string || undefined) : undefined
                         })
                         const updated = planningStore.getOne({ id: planningId })
                         if (updated) saveSnapshot(updated, "Dépense ajoutée")
@@ -464,34 +512,49 @@ export default function BoardDetailPage() {
                       if (updated) saveSnapshot(updated, "Dépense modifiée")
                     }}
                     updateDepenseModal={(id: string, data: Partial<Depense>) => {
+                      const depenseType = data.caisseId ? "caisse" : "divers";
                       appStore.openForm({
                         title: "Modifier la dépense",
-                        description: "Entrez les détails de la dépense",
+                        description: "Modifiez les détails de la dépense",
                         fields: [
-                          { id: "caisseId", name: "caisseId", label: "Puiser dans une caisse (optionnel)", type: "select", options: caisseTotals.map(c => ({ label: c.title, value: c.id })), defaultValue: data.caisseId || undefined },
                           { 
-                            id: "amount", 
-                            name: "amount", 
-                            label: "Montant", 
-                            type: "number", 
-                            defaultValue: data.amount?.toString() || "0",
-                            min: "0",
-                            getDynamicMax: (values: Record<string, string>) => {
-                              const selectedCaisseId = values.caisseId;
-                              if (selectedCaisseId) {
-                                const caisse = caisseTotals.find(c => c.id === selectedCaisseId);
-                                return caisse?.total.toString() || "0";
-                              }
-                              return Math.max(0, currentBudgetTotal - currentDepenseTotal + (data.amount || 0)).toString();
-                            }
+                            id: "depenseType", 
+                            name: "depenseType", 
+                            label: "Type de dépense", 
+                            type: "select", 
+                            options: [
+                              { label: "📋 Divers", value: "divers" },
+                              { label: "📦 Caisse", value: "caisse" }
+                            ],
+                            defaultValue: depenseType,
+                            placeholder: "Sélectionner le type..."
                           },
-                          { id: "diversId", name: "diversId", label: "Catégorie (Divers)", type: "select", options: diversStore.getList().map(d => ({ label: d.title, value: d.id })), defaultValue: data.diversId || undefined },
+                          { 
+                            id: "diversId", 
+                            name: "diversId", 
+                            label: "Divers", 
+                            type: "select", 
+                            options: diversStore.getList().map(d => ({ label: d.title, value: d.id })),
+                            defaultValue: data.diversId || undefined,
+                            placeholder: "Sélectionner un divers...",
+                            showWhen: (values) => values.depenseType === "divers" || !values.depenseType
+                          },
+                          { 
+                            id: "caisseId", 
+                            name: "caisseId", 
+                            label: "Caisse", 
+                            type: "select", 
+                            options: caisseTotals.map(c => ({ label: `${c.title} (${c.total} ${settingStore.currency})`, value: c.id })),
+                            defaultValue: data.caisseId || undefined,
+                            placeholder: "Sélectionner une caisse...",
+                            showWhen: (values) => values.depenseType === "caisse"
+                          },
                         ],
                         onSubmit: (formData) => {
+                          const selectedDepenseType = formData.depenseType || depenseType;
                           planningStore.updateDepense(planningId, id, { 
-                            amount: parseFloat(formData.amount as string), 
-                            diversId: formData.diversId as string || undefined,
-                            caisseId: formData.caisseId as string || undefined
+                            diversId: selectedDepenseType === "divers" ? (formData.diversId as string || undefined) : undefined,
+                            caisseId: selectedDepenseType === "caisse" ? (formData.caisseId as string || undefined) : undefined
                           })
                           const updated = planningStore.getOne({ id: planningId })
                           if (updated) saveSnapshot(updated, "Dépense modifiée")
@@ -608,6 +671,7 @@ export default function BoardDetailPage() {
                 </div>
               </CardFooter>
             </Card>
+            )}
           </TabsContent>
         </Tabs>
       )}

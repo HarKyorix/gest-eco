@@ -1,8 +1,9 @@
-import { Edit, Plus, Trash2 } from "lucide-react"
+import { Edit, Plus, Trash2, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Caisse } from "@/store/db/caisse"
+import { EmptyState } from "@/components/EmptyState"
 
 interface CaissesSectionProps {
   display?: 'list' | 'grid';
@@ -23,7 +24,15 @@ export function CaissesSection({ display = 'grid', caisses, currency, onAdd, onE
         </Button>
       </div>
 
-      {display === 'grid' ? (
+      {caisses.length === 0 ? (
+        <EmptyState
+          icon={Wallet}
+          title="Aucune caisse"
+          description="Créez une caisse pour gérer votre épargne et vos fonds disponibles"
+          actionLabel="Créer une caisse"
+          onAction={onAdd}
+        />
+      ) : display === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {caisses.map((caisse) => (
             <Card key={caisse.id} className="flex flex-col">
@@ -64,7 +73,20 @@ export function CaissesSection({ display = 'grid', caisses, currency, onAdd, onE
             </TableRow>
           </TableHeader>
           <TableBody>
-            {caisses.map((caisse) => (
+            {caisses.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center py-8">
+                  <EmptyState
+                    icon={Wallet}
+                    title="Aucune caisse"
+                    description="Créez une caisse pour gérer votre épargne et vos fonds disponibles"
+                    actionLabel="Créer une caisse"
+                    onAction={onAdd}
+                  />
+                </TableCell>
+              </TableRow>
+            ) : (
+              caisses.map((caisse) => (
               <TableRow key={caisse.id}>
                 <TableCell className="text-left">{caisse.title}</TableCell>
                 <TableCell className="text-center">{caisse?.limit} {currency}</TableCell>
@@ -87,7 +109,8 @@ export function CaissesSection({ display = 'grid', caisses, currency, onAdd, onE
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       )}

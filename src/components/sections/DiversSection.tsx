@@ -1,8 +1,9 @@
-import { Edit, Plus, Trash2 } from "lucide-react"
+import { Edit, Plus, Trash2, Tag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Divers } from "@/store/db/divers"
+import { EmptyState } from "@/components/EmptyState"
 
 interface DiversSectionProps {
   display?: 'list' | 'grid';
@@ -22,7 +23,15 @@ export function DiversSection({ display = 'grid', diversList, onAdd, onEdit, onD
         </Button>
       </div>
 
-      {display === 'grid' ? (
+      {diversList.length === 0 ? (
+        <EmptyState
+          icon={Tag}
+          title="Aucune catégorie"
+          description="Créez une catégorie pour classifier vos dépenses et épargnes"
+          actionLabel="Créer une catégorie"
+          onAction={onAdd}
+        />
+      ) : display === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {diversList.map((divers) => (
             <Card key={divers.id} className="flex flex-col">
@@ -62,7 +71,20 @@ export function DiversSection({ display = 'grid', diversList, onAdd, onEdit, onD
             </TableRow>
           </TableHeader>
           <TableBody>
-            {diversList.map((divers) => (
+            {diversList.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center py-8">
+                  <EmptyState
+                    icon={Tag}
+                    title="Aucune catégorie"
+                    description="Créez une catégorie pour classifier vos dépenses et épargnes"
+                    actionLabel="Créer une catégorie"
+                    onAction={onAdd}
+                  />
+                </TableCell>
+              </TableRow>
+            ) : (
+              diversList.map((divers) => (
               <TableRow key={divers.id}>
                 <TableCell className="text-left">{divers.title}</TableCell>
                 <TableCell className="text-right">
@@ -84,7 +106,8 @@ export function DiversSection({ display = 'grid', diversList, onAdd, onEdit, onD
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       )}

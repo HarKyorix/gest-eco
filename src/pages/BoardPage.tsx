@@ -78,11 +78,11 @@ export default function BoardPage() {
   return (
     <div className="min-h-svh w-full p-4">
       <div className="mx-auto max-w-7xl">
-        <div className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <div className="flex flex-row items-center justify-between flex-wrap gap-4 space-y-0 pb-4">
           <Button variant="outline" onClick={() => navigate("/")} size="icon">
             <ArrowLeft className="size-4" />
           </Button>
-          <div className="flex gap-2 ml-auto w-max"> 
+          <div className="flex flex-wrap gap-2 ml-auto w-max"> 
             <ExportImportButtons
               onExport={handleExport}
               onImport={handleImport}
@@ -110,7 +110,7 @@ export default function BoardPage() {
               display={settingStore.displayMode}
               boards={boardStore.list}
               onAdd={onAddBoard}
-              onNavigate={(id) => navigate(`/board/${id}`)}
+              onNavigate={(id) => navigate(`/?boardId=${id}`)}
               onEdit={(board) => appStore.openForm({
                 title: "Modifier le tableau",
                 description: "Modifiez les détails du tableau",

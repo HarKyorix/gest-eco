@@ -1,8 +1,9 @@
-import { Edit, Plus, Trash2 } from "lucide-react"
+import { Edit, Plus, Trash2, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Source } from "@/store/db/source"
+import { EmptyState } from "@/components/EmptyState"
 
 interface SourcesSectionProps {
   display?: 'list' | 'grid';
@@ -22,7 +23,15 @@ export function SourcesSection({ display = 'grid', sources, onAdd, onEdit, onDel
         </Button>
       </div>
 
-      {display === 'grid' ? (
+      {sources.length === 0 ? (
+        <EmptyState
+          icon={TrendingUp}
+          title="Aucune source de revenu"
+          description="Créez une source pour enregistrer vos revenus et budgets"
+          actionLabel="Créer une source"
+          onAction={onAdd}
+        />
+      ) : display === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {sources.map((source) => (
             <Card key={source.id} className="flex flex-col">
@@ -62,7 +71,20 @@ export function SourcesSection({ display = 'grid', sources, onAdd, onEdit, onDel
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sources.map((source) => (
+            {sources.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center py-8">
+                  <EmptyState
+                    icon={TrendingUp}
+                    title="Aucune source de revenu"
+                    description="Créez une source pour enregistrer vos revenus et budgets"
+                    actionLabel="Créer une source"
+                    onAction={onAdd}
+                  />
+                </TableCell>
+              </TableRow>
+            ) : (
+              sources.map((source) => (
               <TableRow key={source.id}>
                 <TableCell className="text-left">{source.title}</TableCell>
                 <TableCell className="text-right">
@@ -84,7 +106,8 @@ export function SourcesSection({ display = 'grid', sources, onAdd, onEdit, onDel
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+            ))
+            )}
           </TableBody>
         </Table>
       )}

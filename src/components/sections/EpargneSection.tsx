@@ -6,6 +6,7 @@ import { type Epargne } from "@/store/db/planning"
 import type { Caisse } from "@/store/db/caisse"
 import { SearchAndSort } from "@/components/SearchAndSort"
 import { useSearchAndSort } from "@/hooks/useSearchAndSort"
+import { EmptyState } from "@/components/EmptyState"
 
 interface EpargneSectionProps {
   currency?: string;
@@ -37,6 +38,8 @@ export function EpargneSection({ currentEpargneTotal, currency, caisses, epargne
             variant="outline"
             size="icon"
             onClick={addEpargne}
+            title="Ajouter une épargne"
+            aria-label="Ajouter une épargne"
           >
             <Plus className="size-4" />
             <span className="sr-only">Ajouter une épargne</span>
@@ -44,25 +47,37 @@ export function EpargneSection({ currentEpargneTotal, currency, caisses, epargne
         </CardAction>
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground space-y-4">
-        <SearchAndSort
-          searchValue={searchValue}
-          onSearchChange={setSearchValue}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          sortOrder={sortOrder}
-          onSortOrderChange={setSortOrder}
-        />
-        <ItemGroupContainer
-          currency={currency}
-          list={filteredAndSorted.map((epargne) => ({
-            title: caisses.find((c) => c.id === epargne.caisseId)?.title || `Épargne ${epargne.id.slice(0, 8)}`,
-            amount: epargne.amount,
-            commentaire: epargne.commentaire,
-            onUpdate: (data) => updateEpargne(epargne.id, { ...data }),
-            onUpdateModal: (data) => updateEpargneModal(epargne.id, { ...epargne, ...data }),
-            onDelete: () => deleteEpargne(epargne.id),
-          }))}
-        />
+        {epargnes.length === 0 ? (
+          <EmptyState
+            icon={Plus}
+            title="Aucune épargne"
+            description="Enregistrez vos premières épargnes pour cette période"
+            actionLabel="Ajouter une épargne"
+            onAction={addEpargne}
+          />
+        ) : (
+          <>
+            <SearchAndSort
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              sortOrder={sortOrder}
+              onSortOrderChange={setSortOrder}
+            />
+            <ItemGroupContainer
+              currency={currency}
+              list={filteredAndSorted.map((epargne) => ({
+                title: caisses.find((c) => c.id === epargne.caisseId)?.title || `Épargne ${epargne.id.slice(0, 8)}`,
+                amount: epargne.amount,
+                commentaire: epargne.commentaire,
+                onUpdate: (data) => updateEpargne(epargne.id, { ...data }),
+                onUpdateModal: (data) => updateEpargneModal(epargne.id, { ...epargne, ...data }),
+                onDelete: () => deleteEpargne(epargne.id),
+              }))}
+            />
+          </>
+        )}
       </CardContent>
       <CardFooter className="p-2">
         <p className="text-xs text-muted-foreground">

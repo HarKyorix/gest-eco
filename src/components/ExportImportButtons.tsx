@@ -34,7 +34,7 @@ export function ExportImportButtons({
         disabled={disabled}
         className="gap-2"
       >
-        <Download className="size-4" />
+        <Upload className="size-4" />
         Exporter
       </Button>
       <Button
@@ -44,7 +44,7 @@ export function ExportImportButtons({
         disabled={disabled}
         className="gap-2"
       >
-        <Upload className="size-4" />
+        <Download className="size-4" />
         Importer
       </Button>
     </div>
