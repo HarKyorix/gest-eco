@@ -137,10 +137,16 @@ export default function BoardDetailPage() {
   }, [consideredPlannings, diversStore])
 
   useEffect(() => {
-    if (!boardId) {
+    if (!boardId && !planningId) {
       setSearchParams({
         boardId: boardStore.list[0]?.id || "",
         planningId: planningStore.getList(boardId || boardStore.list[0]?.id || "")[0]?.id || "",
+        tab: "caisses"
+      })
+    } else if (boardId && !planningId) {
+      setSearchParams({
+        boardId: boardId,
+        planningId: planningStore.getList(boardId)[0]?.id || "",
         tab: "caisses"
       })
     }
