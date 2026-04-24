@@ -7,12 +7,13 @@ import type { Caisse } from "@/store/db/caisse"
 interface CaissesSectionProps {
   display?: 'list' | 'grid';
   caisses: Caisse[]
+  currency: string
   onAdd: () => void
   onEdit: (caisse: Caisse) => void
   onDelete: (caisse: Caisse) => void
 }
 
-export function CaissesSection({ display = 'grid', caisses, onAdd, onEdit, onDelete }: CaissesSectionProps) {
+export function CaissesSection({ display = 'grid', caisses, currency, onAdd, onEdit, onDelete }: CaissesSectionProps) {
   return (
     <div className="space-y-4 mt-6">
       <div className="flex justify-between items-center">
@@ -57,7 +58,8 @@ export function CaissesSection({ display = 'grid', caisses, onAdd, onEdit, onDel
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Titre</TableHead>
+              <TableHead className="text-left">Titre</TableHead>
+              <TableHead className="text-center">Limite</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -65,6 +67,7 @@ export function CaissesSection({ display = 'grid', caisses, onAdd, onEdit, onDel
             {caisses.map((caisse) => (
               <TableRow key={caisse.id}>
                 <TableCell className="text-left">{caisse.title}</TableCell>
+                <TableCell className="text-center">{caisse?.limit} {currency}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-wrap justify-end gap-2">
                     <Button

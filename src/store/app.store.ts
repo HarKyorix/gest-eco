@@ -15,17 +15,17 @@ export interface AppState {
     title: string;
     description?: string;
     fields: Field[];
-    initialData?: Record<string, string | string[]>;
-    onSubmit: (data: Record<string, string | string[]>) => void;
+    initialData?: Record<string, string | string[] | number>;
+    onSubmit: (data: Record<string, string | string[] | number>) => void;
   };
 
   openDialog: (params: { title: string; description?: string; onConfirm?: () => void }) => void;
   closeDialog: () => void;
   confirmDialog: () => void;
 
-  openForm: (params: { title: string; description?: string; fields: Field[]; initialData?: Record<string, string | string[]>; onSubmit: (data: Record<string, string | string[]>) => void }) => void;
+  openForm: (params: { title: string; description?: string; fields: Field[]; initialData?: Record<string, string | string[] | number>; onSubmit: (data: Record<string, string | string[] | number>) => void }) => void;
   closeForm: () => void;
-  submitForm: (data: Record<string, string | string[]>) => void;
+  submitForm: (data: Record<string, string | string[] | number>) => void;
 
 }
 

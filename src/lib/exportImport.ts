@@ -19,23 +19,26 @@ export interface ExportImportData {
 
 export function useDataExportImport() {
   const exportData = (
-    boards: Board[],
-    plannings: Planning[],
-    caisses: Caisse[],
-    sources: Source[],
-    divers: Divers[],
+    list: {
+      boards?: Board[],
+      plannings?: Planning[],
+      caisses?: Caisse[],
+      sources?: Source[],
+      divers?: Divers[],
+    },
     settings: {
       currency: string
-    }
+    },
+    name: string
   ) => {
     const data: ExportImportData = {
       version: "1.0",
       exportedAt: new Date().toISOString(),
-      boards,
-      plannings,
-      caisses,
-      sources,
-      divers,
+      boards: list.boards || [],
+      plannings: list.plannings || [],
+      caisses: list.caisses || [],
+      sources: list.sources || [],
+      divers: list.divers || [],
       settings,
     }
 
@@ -44,7 +47,7 @@ export function useDataExportImport() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
-    link.download = `family-eco-backup-${new Date().toISOString().split("T")[0]}.json`
+    link.download = `${name}-${new Date().toISOString().split("T")[0]}.json`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

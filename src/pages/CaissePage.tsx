@@ -1,22 +1,21 @@
-
-import { useBoardStore } from "@/store/db/board"
+import { useCaisseStore } from "@/store/db/caisse"
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft, Grid, List } from "lucide-react"
-import { BoardsSection } from "@/components/sections/BoardsSection"
+import { CaissesSection } from "@/components/sections/CaissesSection"
 import { useAppStore } from "@/store/app.store"
 import { useSettingStore } from "@/store/setting.store"
 import { useToast } from "@/store/toast.store"
-import { useDataExportImport } from "@/lib/exportImport"
+import { Card, CardContent } from "@/components/ui/card"
 import { ExportImportButtons } from "@/components/ExportImportButtons"
+import { useDataExportImport } from "@/lib/exportImport"
 
-export default function BoardPage() {
-  const boardStore = useBoardStore()
-  const toast = useToast()
+export default function CaissePage() {
+  const caisseStore = useCaisseStore()
   const appStore = useAppStore()
   const settingStore = useSettingStore()
+  const toast = useToast()
   const navigate = useNavigate()
   const { exportData, importData } = useDataExportImport()
   const [isImporting, setIsImporting] = useState(false)
@@ -25,10 +24,10 @@ export default function BoardPage() {
     try {
       exportData(
         {
-          boards: boardStore.getList(),
+          caisses: caisseStore.getList(),
         },
         settingStore,
-        "boards"
+        "caisses"
       )
       toast.success("Export réussi", "Vos données ont été téléchargées")
     } catch (error) {
@@ -43,10 +42,10 @@ export default function BoardPage() {
       const data = await importData(file)
       
       // Effacer les données existantes
-      boardStore.clear()
+      caisseStore.clear()
 
       // Importer les nouvelles données
-      data.boards.forEach((board) => boardStore.add(board))
+      data.caisses.forEach((caisse) => caisseStore.add(caisse))
 
       toast.success("Import réussi", "Vos données ont été importées avec succès")
       
@@ -64,16 +63,16 @@ export default function BoardPage() {
     }
   }
 
-  const onAddBoard = () => {
-    const newBoard = {
-      title: "Nouveau tableau"+boardStore.list.length,
+  const onAddCaisse = () => {
+    const newCaisse = {
+      title: "Nouvelle caisse " + (caisseStore.list.length + 1),
     }
-    boardStore.add(newBoard)
+    caisseStore.add(newCaisse)
   }
 
   useEffect(() => {
-    boardStore.init()
-  }, [boardStore])
+    caisseStore.init()
+  }, [caisseStore])
 
   return (
     <div className="min-h-svh w-full p-4">
@@ -106,22 +105,28 @@ export default function BoardPage() {
         </div>
         <Card className="w-full h-full">
           <CardContent>
-            <BoardsSection
+            <CaissesSection
               display={settingStore.displayMode}
-              boards={boardStore.list}
-              onAdd={onAddBoard}
-              onNavigate={(id) => navigate(`/board/${id}`)}
-              onEdit={(board) => appStore.openForm({
-                title: "Modifier le tableau",
-                description: "Modifiez les détails du tableau",
-                fields: [{ id: "title", name: "title", label: "Titre", type: "text" }],
-                initialData: { title: board.title },
-                onSubmit: (data) => boardStore.update(board.id, { title: data.title as string })
+              caisses={caisseStore.list}
+              currency={settingStore.currency}
+              onAdd={onAddCaisse}
+              onEdit={(caisse) => appStore.openForm({
+                title: "Modifier la caisse",
+                description: "Modifiez les détails de la caisse",
+                fields: [
+                  { id: "title", name: "title", label: "Titre", type: "text" },
+                  { id: "limit", name: "limit", label: "Limite", type: "number" }
+                ],
+                initialData: { title: caisse.title, limit: caisse.limit ?? 0 },
+                onSubmit: (data) => caisseStore.update(caisse.id, { title: data.title as string, limit: parseFloat(data.limit as string) || 0 })
               })}
-              onDelete={(board) => appStore.openDialog({
-                title: "Supprimer le tableau",
-                description: `Êtes-vous sûr de vouloir supprimer "${board.title}" ?`,
-                onConfirm: () => boardStore.remove(board.id)
+              onDelete={(caisse) => appStore.openDialog({
+                title: "Supprimer la caisse",
+                description: `Êtes-vous sûr de vouloir supprimer "${caisse.title}" ?`,
+                onConfirm: () => {
+                  caisseStore.remove(caisse.id)
+                  toast.success("Caisse supprimée", `La caisse "${caisse.title}" a été supprimée`)
+                }
               })}
             />
           </CardContent>
