@@ -31,7 +31,7 @@ function App() {
   
   return (
     <>
-      <BrowserRouter>
+      <BrowserRouter basename="/gest-eco">
         <Routes>          
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />}/>
