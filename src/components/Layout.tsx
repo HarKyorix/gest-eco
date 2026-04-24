@@ -2,7 +2,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, Si
 import { useBoardStore } from "@/store/db/board"
 import { Outlet, useNavigate, useSearchParams } from "react-router-dom"
 import { Select,SelectContent,SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { PieChart } from "lucide-react"
+import { Moon, PieChart, Sun } from "lucide-react"
 import { useSettingStore } from "@/store/setting.store"
 
 import {
@@ -11,6 +11,7 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar"
 import { usePlanningStore } from "@/store/db/planning"
+import { Button } from "./ui/button"
 
 export default function Layout() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -150,6 +151,17 @@ export default function Layout() {
               </MenubarMenu>
             </Menubar>
             )}
+             <Button
+              variant="default"
+              size="icon"
+              onClick={() => settingStore.setPreferances('theme', settingStore.theme === 'light' ? 'dark' : 'light')}
+            >
+              { settingStore.theme === 'light' ? 
+                <Sun className="size-4" />
+                : 
+                <Moon className="size-4" />
+              }
+            </Button>
           </div>
           
           <Outlet />
