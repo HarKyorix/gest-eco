@@ -124,6 +124,14 @@ export default function SourcePage() {
                   toast.success("Source supprimée", `La source "${source.title}" a été supprimée`)
                 }
               })}
+              onDeleteMultiple={(sources) => appStore.openDialog({
+                title: "Supprimer les sources",
+                description: `Êtes-vous sûr de vouloir supprimer ${sources.length} source${sources.length > 1 ? 's' : ''} ?`,
+                onConfirm: () => {
+                  sources.forEach((source) => sourceStore.remove(source.id))
+                  toast.success("Sources supprimées", `${sources.length} source${sources.length > 1 ? 's' : ''} ${sources.length > 1 ? 'ont' : 'a'} été supprimée${sources.length > 1 ? 's' : ''}`)
+                }
+              })}
             />
           </CardContent>
         </Card>

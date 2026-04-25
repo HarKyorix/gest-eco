@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { Navigate, Route, Routes, HashRouter } from "react-router-dom"
 import HomePage from "./pages/HomePage"
 import Layout from "./components/Layout"
 import { AlertDialogDestructive } from "@/components/AlertDialogDestructive"
@@ -31,7 +31,7 @@ function App() {
   
   return (
     <>
-      <BrowserRouter basename="/gest-eco">
+      <HashRouter>
         <Routes>          
           <Route path="/" element={<Layout />}>
             <Route index element={<HomePage />}/>
@@ -42,7 +42,7 @@ function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
 
       <DialogForm
         open={appStore.form.open}

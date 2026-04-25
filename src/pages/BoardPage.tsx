@@ -123,6 +123,14 @@ export default function BoardPage() {
                 description: `Êtes-vous sûr de vouloir supprimer "${board.title}" ?`,
                 onConfirm: () => boardStore.remove(board.id)
               })}
+              onDeleteMultiple={(boards) => appStore.openDialog({
+                title: "Supprimer les tableaux",
+                description: `Êtes-vous sûr de vouloir supprimer ${boards.length} tableau${boards.length > 1 ? 'x' : ''} ?`,
+                onConfirm: () => {
+                  boards.forEach((board) => boardStore.remove(board.id))
+                  toast.success("Tableaux supprimés", `${boards.length} tableau${boards.length > 1 ? 'x' : ''} ${boards.length > 1 ? 'ont' : 'a'} été supprimé${boards.length > 1 ? 's' : ''}`)
+                }
+              })}
             />
           </CardContent>
         </Card>

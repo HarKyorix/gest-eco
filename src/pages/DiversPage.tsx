@@ -124,6 +124,14 @@ export default function DiversPage() {
                   toast.success("Divers supprimé", `Le divers "${divers.title}" a été supprimé`)
                 }
               })}
+              onDeleteMultiple={(diversList) => appStore.openDialog({
+                title: "Supprimer les divers",
+                description: `Êtes-vous sûr de vouloir supprimer ${diversList.length} divers${diversList.length > 1 ? '' : ''} ?`,
+                onConfirm: () => {
+                  diversList.forEach((divers) => diversStore.remove(divers.id))
+                  toast.success("Divers supprimés", `${diversList.length} divers ont été supprimés`)
+                }
+              })}
             />
           </CardContent>
         </Card>
