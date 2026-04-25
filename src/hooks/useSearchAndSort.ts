@@ -8,7 +8,7 @@ export interface SearchableSortableItem {
 }
 
 export function useSearchAndSort<T extends SearchableSortableItem>(
-  items: T[]
+  items: T[],
 ) {
   const [searchValue, setSearchValue] = useState("")
   const [sortBy, setSortBy] = useState<"name" | "amount">("name")

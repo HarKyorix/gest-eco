@@ -6,7 +6,7 @@ interface SearchAndSortProps {
   searchValue: string
   onSearchChange: (value: string) => void
   sortBy: "name" | "amount"
-  onSortChange: (sort: "name" | "amount") => void
+  onSortChange?: (sort: "name" | "amount") => void
   sortOrder: "asc" | "desc"
   onSortOrderChange: (order: "asc" | "desc") => void
 }
@@ -24,7 +24,7 @@ export function SearchAndSort({
   }
 
   const toggleSortBy = () => {
-    onSortChange(sortBy === "name" ? "amount" : "name")
+    onSortChange?.(sortBy === "name" ? "amount" : "name")
   }
 
   return (
@@ -38,6 +38,7 @@ export function SearchAndSort({
           className="pl-8"
         />
       </div>
+      {onSortChange && (
       <Button
         variant="outline"
         size="sm"
@@ -46,6 +47,7 @@ export function SearchAndSort({
       >
         Tri: {sortBy === "name" ? "Nom" : "Montant"}
       </Button>
+      )}
       <Button
         variant="outline"
         size="icon"

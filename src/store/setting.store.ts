@@ -17,7 +17,7 @@ export const useSettingStore = create<SettingState>()(
     (set) => ({
       theme: 'system',
       displayMode: 'grid',
-      displaySidebar: true,
+      displaySidebar: false,
       currency: 'FCFA',
 
       setPreferances: (key, value) => {
@@ -27,7 +27,8 @@ export const useSettingStore = create<SettingState>()(
         set({
           theme: 'system',
           displayMode: 'grid',
-          displaySidebar: true,
+          displaySidebar: false,
+          currency: 'FCFA',
         });
       }
     }),

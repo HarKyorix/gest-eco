@@ -39,7 +39,7 @@ export default function Layout() {
       <div className="w-full flex min-h-svh">
         <Sidebar className="w-(--sidebar-width) bg-slate-950/95 text-white shadow-lg">
           <SidebarHeader className="border-b border-white/10 px-4 py-4">
-            Family Eco
+            Gest Eco
           </SidebarHeader>
 
           <SidebarContent className="mt-8 px-2 py-3">

@@ -128,6 +128,14 @@ export default function CaissePage() {
                   toast.success("Caisse supprimée", `La caisse "${caisse.title}" a été supprimée`)
                 }
               })}
+              onDeleteMultiple={(caisses) => appStore.openDialog({
+                title: "Supprimer les caisses",
+                description: `Êtes-vous sûr de vouloir supprimer ${caisses.length} caisse${caisses.length > 1 ? 's' : ''} ?`,
+                onConfirm: () => {
+                  caisses.forEach((caisse) => caisseStore.remove(caisse.id))
+                  toast.success("Caisses supprimées", `${caisses.length} caisse${caisses.length > 1 ? 's' : ''} ${caisses.length > 1 ? 'ont' : 'a'} été supprimée${caisses.length > 1 ? 's' : ''}`)
+                }
+              })}
             />
           </CardContent>
         </Card>
